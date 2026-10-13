@@ -1,0 +1,159 @@
+Syslog logging: enabled
+Buffer logging: level debugging
+Console logging: level informational
+Persistent logging: disabled
+Monitor logging: level informational
+Synchronous logging: disabled
+Trap logging: level informational
+Sequence numbers: disabled
+Syslog facility: local4
+Hostname format: Hostname only
+Repeat logging interval: disabled
+Repeat messages: disabled
+Root login logging: disabled
+
+External configuration:
+    active: 
+    inactive: 
+
+Facility                   Severity            Effective Severity
+--------------------       -------------       ------------------
+aaa                        debugging           debugging    
+accounting                 debugging           debugging    
+acl                        debugging           debugging    
+agent                      debugging           debugging    
+ale                        debugging           debugging    
+arp                        debugging           debugging    
+bfd                        debugging           debugging    
+bgp                        debugging           debugging    
+bmp                        debugging           debugging    
+capacity                   debugging           debugging    
+capi                       debugging           debugging    
+classification             debugging           debugging    
+clear                      debugging           debugging    
+cvx                        debugging           debugging    
+dataplane                  debugging           debugging    
+dhcp                       debugging           debugging    
+dmf                        debugging           debugging    
+dot1x                      debugging           debugging    
+dot1xhttp                  debugging           debugging    
+dscp                       debugging           debugging    
+envmon                     debugging           debugging    
+eth                        debugging           debugging    
+eventmon                   debugging           debugging    
+extension                  debugging           debugging    
+fhrp                       debugging           debugging    
+flow                       debugging           debugging    
+flowtracking               debugging           debugging    
+forwarding                 debugging           debugging    
+fru                        debugging           debugging    
+fwk                        debugging           debugging    
+gmp                        debugging           debugging    
+hardware                   debugging           debugging    
+health                     debugging           debugging    
+httpservice                debugging           debugging    
+igmp                       debugging           debugging    
+igmpsnooping               debugging           debugging    
+influxtelemetry            debugging           debugging    
+int                        debugging           debugging    
+intf                       debugging           debugging    
+ip6routing                 debugging           debugging    
+iprib                      debugging           debugging    
+ira                        debugging           debugging    
+isis                       debugging           debugging    
+kernelfib                  debugging           debugging    
+lacp                       debugging           debugging    
+lag                        debugging           debugging    
+launcher                   debugging           debugging    
+ldp                        debugging           debugging    
+license                    debugging           debugging    
+lineproto                  debugging           debugging    
+lldp                       debugging           debugging    
+logmgr                     debugging           debugging    
+loopback                   debugging           debugging    
+loopprotect                debugging           debugging    
+mcs                        debugging           debugging    
+mirroring                  debugging           debugging    
+mka                        debugging           debugging    
+mlag                       debugging           debugging    
+mldsnooping                debugging           debugging    
+mmode                      debugging           debugging    
+mroute                     debugging           debugging    
+mrp                        debugging           debugging    
+msdp                       debugging           debugging    
+msrp                       debugging           debugging    
+msspolicymonitor           debugging           debugging    
+mvrp                       debugging           debugging    
+nat                        debugging           debugging    
+openconfig                 debugging           debugging    
+openflow                   debugging           debugging    
+ospf                       debugging           debugging    
+ospf3                      debugging           debugging    
+package                    debugging           debugging    
+pfc                        debugging           debugging    
+pimbsr                     debugging           debugging    
+portsecurity               debugging           debugging    
+postcardtelemetry          debugging           debugging    
+pseudowire                 debugging           debugging    
+ptp                        debugging           debugging    
+pwrmgmt                    debugging           debugging    
+qos                        debugging           debugging    
+queuemonitor               debugging           debugging    
+radius                     debugging           debugging    
+redundancy                 debugging           debugging    
+rib                        debugging           debugging    
+routing                    debugging           debugging    
+security                   debugging           debugging    
+servermonitor              debugging           debugging    
+serverprobe                debugging           debugging    
+sfe                        debugging           debugging    
+spantree                   debugging           debugging    
+sso                        debugging           debugging    
+stagemgr                   debugging           debugging    
+sys                        debugging           debugging    
+sysdb                      debugging           debugging    
+tapagg                     debugging           debugging    
+tcp                        debugging           debugging    
+trafficpolicy              debugging           debugging    
+transceiver                debugging           debugging    
+tunnel                     debugging           debugging    
+tunnelintf                 debugging           debugging    
+vlan                       debugging           debugging    
+vrf                        debugging           debugging    
+vrrp                       debugging           debugging    
+vxlan                      debugging           debugging    
+ztp                        debugging           debugging    
+
+Log Buffer:
+Oct 12 13:42:47 HUB-1 Ospf: Instance 1: %OSPF-4-OSPF_STATE_CHANGE: NGB 1.1.1.11 (10.0.12.0) on interface 10.0.12.1 changed from <INIT> to <2 WAYS>
+Oct 12 13:42:47 HUB-1 Ospf: Instance 1: %OSPF-4-OSPF_STATE_CHANGE: NGB 1.1.1.11 (10.0.12.0) on interface 10.0.12.1 changed from <2 WAYS> to <EXCH START>
+Oct 12 13:42:47 HUB-1 Lldp: %LLDP-5-NEIGHBOR_NEW: LLDP neighbor with chassisId 001c.73af.0290 and portId "Ethernet1" added on interface Ethernet1
+Oct 12 13:42:49 HUB-1 Ospf: Instance 1: %OSPF-4-OSPF_ADJACENCY_TEARDOWN: NGB 1.1.1.11, interface 10.0.12.1 adjacency dropped: interface went down, state was: EXCH START
+Oct 12 13:42:49 HUB-1 Ospf: Instance 1: %OSPF-4-OSPF_STATE_CHANGE: NGB 1.1.1.11 (10.0.12.0) on interface 10.0.12.1 changed from <EXCH START> to <DOWN>
+Oct 12 13:42:49 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to down
+Oct 12 13:42:49 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to up
+Oct 12 13:42:52 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to down
+Oct 12 13:42:52 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to up
+Oct 12 13:42:55 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to down
+Oct 12 13:42:55 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to up
+Oct 12 13:42:58 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to down
+Oct 12 13:42:58 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to up
+Oct 12 13:43:01 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to down
+Oct 12 13:43:01 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to up
+Oct 12 13:43:04 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to down
+Oct 12 13:43:04 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to up
+Oct 12 13:43:10 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to down
+Oct 12 13:43:10 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to up
+Oct 12 13:43:13 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to down
+Oct 12 13:43:13 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to up
+Oct 12 13:43:17 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to down
+Oct 12 13:43:17 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to up
+Oct 12 13:43:18 HUB-1 SuperServer: %SYS-5-SYSTEM_RESTARTED: System restarted
+Oct 12 13:43:18 HUB-1 SuperServer: %SYS-6-SYSTEM_INFO: Software image version: 4.34.8M-49693515.4348M (engineering build)
+Oct 12 13:43:18 HUB-1 SuperServer: %SYS-6-SYSTEM_INFO: Model: cEOSLab
+Oct 12 13:43:18 HUB-1 SuperServer: %SYS-6-SYSTEM_INFO: Serial number: 60065FB21241126B09B44447F1A52C65
+Oct 12 13:43:20 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to down
+Oct 12 13:43:20 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to up
+Oct 12 13:43:23 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to down
+Oct 12 13:43:23 HUB-1 Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet1 (downlink to BRANCH-7), changed state to up
+Oct 12 13:43:27 HUB-1 Lldp: %LLDP-5-NEIGHBOR_NEW: LLDP neighbor with chassisId 001c.73af.0290 and portId "Ethernet1" added on interface Ethernet1

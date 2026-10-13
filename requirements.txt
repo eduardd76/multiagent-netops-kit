@@ -1,0 +1,3 @@
+pydantic>=2.6
+pyyaml>=6
+openai>=1.40

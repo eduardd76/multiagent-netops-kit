@@ -1,0 +1,7 @@
+interface Ethernet1
+   description uplink to HUB-1
+   mtu 1500
+   no switchport
+   ip address 10.0.12.0/31
+   ip ospf network point-to-point
+   ip ospf area 0.0.0.1

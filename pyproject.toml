@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "netops"
+version = "0.1.0"
+description = "Build multi-agent AI systems for network operations: a team of agents, a playbook, and a human gate."
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Apache-2.0"}
+dependencies = ["pydantic>=2.6", "pyyaml>=6", "openai>=1.40"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "nbformat>=5.10", "nbclient>=0.10", "ipykernel>=6.29"]
+
+[tool.setuptools.packages.find]
+include = ["netops*"]
+
+[tool.setuptools.package-data]
+netops = ["*.yaml", "data/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["."]
+markers = ["live: needs a running containerlab cEOS lab (NETOPS_CEOS=1)", "notebooks: executes lab notebooks headless"]

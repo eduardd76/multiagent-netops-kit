@@ -1,0 +1,40 @@
+{
+    "vrfs": {
+        "default": {
+            "instList": {
+                "1": {
+                    "interfaces": {
+                        "Ethernet1": {
+                            "state": "p2p",
+                            "cost": 10,
+                            "neighborCount": 0,
+                            "helloInterval": 10,
+                            "deadInterval": 40,
+                            "retransmitInterval": 5,
+                            "transmitDelay": 1,
+                            "options": {
+                                "multitopologyCapability": false,
+                                "externalRoutingCapability": false,
+                                "multicastCapability": false,
+                                "nssaCapability": false,
+                                "linkLocalSignaling": false,
+                                "demandCircuitsSupport": false,
+                                "opaqueLsaSupport": false,
+                                "doNotUseInRouteCalc": false
+                            },
+                            "area": "0.0.0.0",
+                            "interfaceAddress": "10.0.12.1",
+                            "interfaceMask": 31,
+                            "interfaceType": "p2p",
+                            "bfdState": "default",
+                            "passive": false,
+                            "teEnabled": false,
+                            "interfaceSpeed": 1000,
+                            "tilfaProtection": "disabled"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

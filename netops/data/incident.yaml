@@ -1,0 +1,34 @@
+# The ONE incident the workshop chases. Everything the simulator does comes from this file.
+id: branch7_ospf_area_mismatch
+title: "Branch-7 lost the core service"
+affected: BRANCH-7                          # the device the page is about
+start_time: "2026-10-12T03:14:00"          # the cold open: 3:14 am
+seed: 7                                     # all randomness (timing jitter) is seeded
+service: {prefix: 10.100.10.0/24, address: 10.100.10.10}
+devices:
+  BRANCH-7: {role: branch, router_id: 1.1.1.11, lan: 10.20.20.0/24, lan_gateway: 10.20.20.1}
+  HUB-1:    {role: hub,    router_id: 1.1.1.1,  originates_service: true}
+  BRANCH-8: {role: branch, router_id: 1.1.1.12, lan: 10.30.30.0/24, lan_gateway: 10.30.30.1}   # healthy control
+  HUB-2:    {role: hub,    router_id: 2.2.2.2,  originates_service: true}
+links:
+  - {a: "BRANCH-7:Ethernet1", b: "HUB-1:Ethernet1", subnet: 10.0.12.0/31, area: 0.0.0.0,
+     a_description: "uplink to HUB-1", b_description: "downlink to BRANCH-7"}
+  - {a: "BRANCH-8:Ethernet1", b: "HUB-2:Ethernet1", subnet: 10.0.22.0/31, area: 0.0.0.0,
+     a_description: "uplink to HUB-2", b_description: "downlink to BRANCH-8"}
+timers: {hello: 10, dead: 40}
+# Measured on ceos:4.34.8M with 10/40 timers (2026-10-12): FULL 3-9 s after a fix, route 9-16 s.
+convergence: {full_after_s: 9.0, route_after_full_s: 6.5}
+fault:                                      # minutes relative to start_time, applied in order
+  - {at_min: -60, op: flap,     link: "BRANCH-7:Ethernet1", count: 6,  every_s: 20}   # flapped and RECOVERED
+  - {at_min: -5,  op: set_area, link: "BRANCH-7:Ethernet1", area: 0.0.0.1}           # the silent root cause
+  - {at_min: -4,  op: flap,     link: "BRANCH-7:Ethernet1", count: 12, every_s: 15}   # flapped and did NOT recover
+log_volume: 400                             # BRANCH-7 log lines; padded with further (genuine) flaps
+variants:
+  mtu_mismatch:                             # a different silent fault (neighbor stuck in exchStart)
+    fault:
+      - {at_min: -60, op: flap,    link: "BRANCH-7:Ethernet1", count: 6,  every_s: 20}
+      - {at_min: -5,  op: set_mtu, link: "BRANCH-7:Ethernet1", mtu: 9000}
+      - {at_min: -4,  op: flap,    link: "BRANCH-7:Ethernet1", count: 12, every_s: 15}
+  full_no_route:                            # adjacency FULL but the route is filtered (validator trap)
+    fault:
+      - {at_min: -5,  op: filter_route, device: BRANCH-7}

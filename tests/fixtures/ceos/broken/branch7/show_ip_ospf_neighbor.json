@@ -1,0 +1,11 @@
+{
+    "vrfs": {
+        "default": {
+            "instList": {
+                "1": {
+                    "ospfNeighborEntries": []
+                }
+            }
+        }
+    }
+}

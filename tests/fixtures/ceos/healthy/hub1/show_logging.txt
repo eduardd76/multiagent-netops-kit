@@ -1,0 +1,159 @@
+Syslog logging: enabled
+Buffer logging: level debugging
+Console logging: level informational
+Persistent logging: disabled
+Monitor logging: level informational
+Synchronous logging: disabled
+Trap logging: level informational
+Sequence numbers: disabled
+Syslog facility: local4
+Hostname format: Hostname only
+Repeat logging interval: disabled
+Repeat messages: disabled
+Root login logging: disabled
+
+External configuration:
+    active: 
+    inactive: 
+
+Facility                   Severity            Effective Severity
+--------------------       -------------       ------------------
+aaa                        debugging           debugging    
+accounting                 debugging           debugging    
+acl                        debugging           debugging    
+agent                      debugging           debugging    
+ale                        debugging           debugging    
+arp                        debugging           debugging    
+bfd                        debugging           debugging    
+bgp                        debugging           debugging    
+bmp                        debugging           debugging    
+capacity                   debugging           debugging    
+capi                       debugging           debugging    
+classification             debugging           debugging    
+clear                      debugging           debugging    
+cvx                        debugging           debugging    
+dataplane                  debugging           debugging    
+dhcp                       debugging           debugging    
+dmf                        debugging           debugging    
+dot1x                      debugging           debugging    
+dot1xhttp                  debugging           debugging    
+dscp                       debugging           debugging    
+envmon                     debugging           debugging    
+eth                        debugging           debugging    
+eventmon                   debugging           debugging    
+extension                  debugging           debugging    
+fhrp                       debugging           debugging    
+flow                       debugging           debugging    
+flowtracking               debugging           debugging    
+forwarding                 debugging           debugging    
+fru                        debugging           debugging    
+fwk                        debugging           debugging    
+gmp                        debugging           debugging    
+hardware                   debugging           debugging    
+health                     debugging           debugging    
+httpservice                debugging           debugging    
+igmp                       debugging           debugging    
+igmpsnooping               debugging           debugging    
+influxtelemetry            debugging           debugging    
+int                        debugging           debugging    
+intf                       debugging           debugging    
+ip6routing                 debugging           debugging    
+iprib                      debugging           debugging    
+ira                        debugging           debugging    
+isis                       debugging           debugging    
+kernelfib                  debugging           debugging    
+lacp                       debugging           debugging    
+lag                        debugging           debugging    
+launcher                   debugging           debugging    
+ldp                        debugging           debugging    
+license                    debugging           debugging    
+lineproto                  debugging           debugging    
+lldp                       debugging           debugging    
+logmgr                     debugging           debugging    
+loopback                   debugging           debugging    
+loopprotect                debugging           debugging    
+mcs                        debugging           debugging    
+mirroring                  debugging           debugging    
+mka                        debugging           debugging    
+mlag                       debugging           debugging    
+mldsnooping                debugging           debugging    
+mmode                      debugging           debugging    
+mroute                     debugging           debugging    
+mrp                        debugging           debugging    
+msdp                       debugging           debugging    
+msrp                       debugging           debugging    
+msspolicymonitor           debugging           debugging    
+mvrp                       debugging           debugging    
+nat                        debugging           debugging    
+openconfig                 debugging           debugging    
+openflow                   debugging           debugging    
+ospf                       debugging           debugging    
+ospf3                      debugging           debugging    
+package                    debugging           debugging    
+pfc                        debugging           debugging    
+pimbsr                     debugging           debugging    
+portsecurity               debugging           debugging    
+postcardtelemetry          debugging           debugging    
+pseudowire                 debugging           debugging    
+ptp                        debugging           debugging    
+pwrmgmt                    debugging           debugging    
+qos                        debugging           debugging    
+queuemonitor               debugging           debugging    
+radius                     debugging           debugging    
+redundancy                 debugging           debugging    
+rib                        debugging           debugging    
+routing                    debugging           debugging    
+security                   debugging           debugging    
+servermonitor              debugging           debugging    
+serverprobe                debugging           debugging    
+sfe                        debugging           debugging    
+spantree                   debugging           debugging    
+sso                        debugging           debugging    
+stagemgr                   debugging           debugging    
+sys                        debugging           debugging    
+sysdb                      debugging           debugging    
+tapagg                     debugging           debugging    
+tcp                        debugging           debugging    
+trafficpolicy              debugging           debugging    
+transceiver                debugging           debugging    
+tunnel                     debugging           debugging    
+tunnelintf                 debugging           debugging    
+vlan                       debugging           debugging    
+vrf                        debugging           debugging    
+vrrp                       debugging           debugging    
+vxlan                      debugging           debugging    
+ztp                        debugging           debugging    
+
+Log Buffer:
+Oct 12 13:41:14 hub1 Lldp: %LLDP-5-NEIGHBOR_NEW: LLDP neighbor with chassisId 001c.73af.0290 and portId "Management0" added on interface Management0
+Oct 12 13:41:14 hub1 RouteCache: %AGENT-6-INITIALIZED: Agent 'RouteCache' initialized; pid=1059
+Oct 12 13:41:14 hub1 Dot1x: %AGENT-6-INITIALIZED: Agent 'Dot1x' initialized; pid=1061
+Oct 12 13:41:14 hub1 Ospf: Commence routing updates
+Oct 12 13:41:15 hub1 Lldp: %LLDP-5-NEIGHBOR_NEW: LLDP neighbor with chassisId 001c.73af.0290 and portId "Ethernet1" added on interface Ethernet1
+Oct 12 13:41:16 hub1 SuperServer: %SECURITY-6-SSL_PROFILE_VALID: SSL profile 'ARISTA_DEFAULT_PROFILE' is valid
+Oct 12 13:41:19 HUB-1 Ospf: Instance 1: %OSPF-4-OSPF_STATE_CHANGE: NGB 1.1.1.11 (10.0.12.0) on interface 10.0.12.1 changed from <DOWN> to <DOWN>
+Oct 12 13:41:19 HUB-1 Ospf: Instance 1: %OSPF-4-OSPF_STATE_CHANGE: NGB 1.1.1.11 (10.0.12.0) on interface 10.0.12.1 changed from <DOWN> to <INIT>
+Oct 12 13:41:21 HUB-1 SuperServer: %SYS-6-SSH_HOST_KEY_UPDATED: SSH host key rsa has been updated. The SHA-256 hash of public key rsa fingerprint is 8Ah69GUoDakxKGBtgJqe2mxHp4EJ3nIFpCawpo7INtM.
+Oct 12 13:41:21 HUB-1 SuperServer: %SYS-6-SSH_HOST_KEY_UPDATED: SSH host key ecdsa-nistp256 has been updated. The SHA-256 hash of public key ecdsa-nistp256 fingerprint is dLi1XAzDcvCU1n/HvgzWx/ZI7ebLSVjxLtMYnCGhFvw.
+Oct 12 13:41:21 HUB-1 SuperServer: %SYS-6-SSH_HOST_KEY_UPDATED: SSH host key ecdsa-nistp521 has been updated. The SHA-256 hash of public key ecdsa-nistp521 fingerprint is J2hltRziaToYXTnB6yS9bWGGVGLZ00wwqpYvHNVoWVY.
+Oct 12 13:41:21 HUB-1 SuperServer: %SYS-6-SSH_HOST_KEY_UPDATED: SSH host key ed25519 has been updated. The SHA-256 hash of public key ed25519 fingerprint is oi+qo07GExGP/ZwpQQM5aUNoPydsZowCGKy2bngBhzE.
+Oct 12 13:41:21 HUB-1 SuperServer: %SYS-6-SSH_HOST_KEY_UPDATED: SSH host key dsa has been updated. The SHA-256 hash of public key dsa fingerprint is dggDWA7WT2I99mbqNYACmn/XeVcChautsrsk89V83po.
+Oct 12 13:41:24 HUB-1 Ospf: Instance 1: %OSPF-4-OSPF_STATE_CHANGE: NGB 1.1.1.11 (10.0.12.0) on interface 10.0.12.1 changed from <INIT> to <2 WAYS>
+Oct 12 13:41:25 HUB-1 Ospf: Instance 1: %OSPF-4-OSPF_STATE_CHANGE: NGB 1.1.1.11 (10.0.12.0) on interface 10.0.12.1 changed from <2 WAYS> to <EXCH START>
+Oct 12 13:41:25 HUB-1 Ospf: Instance 1: %OSPF-4-OSPF_STATE_CHANGE: NGB 1.1.1.11 (10.0.12.0) on interface 10.0.12.1 changed from <EXCH START> to <EXCHANGE>
+Oct 12 13:41:25 HUB-1 Ospf: Instance 1: %OSPF-4-OSPF_STATE_CHANGE: NGB 1.1.1.11 (10.0.12.0) on interface 10.0.12.1 changed from <EXCHANGE> to <LOADING>
+Oct 12 13:41:25 HUB-1 Ospf: Instance 1: %OSPF-4-OSPF_STATE_CHANGE: NGB 1.1.1.11 (10.0.12.0) on interface 10.0.12.1 changed from <LOADING> to <FULL>
+Oct 12 13:41:25 HUB-1 Ospf: Instance 1: %OSPF-4-OSPF_ADJACENCY_ESTABLISHED: NGB 1.1.1.11, interface 10.0.12.1 adjacency established
+Oct 12 13:41:33 HUB-1 ConfigAgent: %SYS-5-CONFIG_E: Enter configuration mode from console by root on UnknownTty (UnknownIpAddr)
+Oct 12 13:41:33 HUB-1 ConfigAgent: %SYS-5-CONFIG_I: Configured from console by root on UnknownTty (UnknownIpAddr)
+Oct 12 13:41:44 HUB-1 Stp: %SPANTREE-6-STABLE_CHANGE: Stp state is now stable
+Oct 12 13:42:13 HUB-1 SystemInitMonitor: %SYS-5-SYSTEM_INITIALIZED: System is initialized
+Oct 12 13:42:13 HUB-1 SuperServer: %SYS-5-CLI_SCHEDULER_ENABLED: CliScheduler is enabled, continuing its execution of scheduled CLI jobs.
+Oct 12 13:42:13 HUB-1 ProcLauncher-1: %LAUNCHER-6-PROCESS_STOP: Configuring process 'SystemInitMonitor' to stop in role 'ActiveSupervisor'
+Oct 12 13:42:14 HUB-1 ProcMgr: %PROCMGR-6-COMMAND_RECEIVED: ProcMgr has received 'warm start' command
+Oct 12 13:42:14 HUB-1 ProcMgr: %PROCMGR-6-WORKER_WARMSTART: ProcMgr worker warm start. (PID=570)
+Oct 12 13:42:14 HUB-1 ProcMgr: %PROCMGR-7-PROCESSES_DECONFIGURED: Processes no longer running under ProcMgr control: ['SystemInitMonitor']
+Oct 12 13:42:14 HUB-1 ProcMgr: %PROCMGR-7-PROCESSES_ADOPTED: ProcMgr (PID=570) adopted running processes:  (ProcLauncher-1, PID=615) (PerfMonitor, PID=616) (Sysdb, PID=617) (Launcher, PID=618) (Fru, PID=619) (StageMgr, PID=620) (ConfigAgent, PID=621) (AgentMonitor, PID=856) (LacpTxAgent, PID=857) (IgmpSnooping, PID=859) (Acl, PID=860) (SharedSecretProfile, PID=862) (KernelNetworkInfo, PID=863) (SuperServer, PID=864) (EventMgr, PID=865) (FibServices, PID=866) (TopoAgent, PID=867) (Qos, PID=868) (Ira, PID=869) (Bfd, PID=870) (L2Rib, PID=871) (CapiApp, PID=872) (Ebra, PID=873) (IfIndex, PID=875) (PortSec, PID=876) (Thermostat, PID=877) (Arp, PID=878) (rbfdu, PID=879) (PowerFuse, PID=880) (Aaa, PID=881) (ReloadCauseAgent, PID=882) (McastCommon, PID=883) (StpTxRx, PID=885) (XcvrCentralAgent, PID=886) (KernelFib, PID=887) (Lag, PID=888) (StandbyCpld, PID=889) (StpTopology, PID=890) (Stp, PID=891) (McastCommon6, PID=892) (Tunnel, PID=897) (Lldp, PID=900) (Etba, PID=901) (PhyEthtool-1, PID=907) (ArfaAegis, PID=1002) (ArfaState, PID=1003) (IpRib, PID=1007) (ConnectedRoute, PID=1008) (RouteInput, PID=1010) (Ospf, PID=1011) (RouteCache, PID=1059) (Dot1x, PID=1061)
+Oct 12 13:42:14 HUB-1 ProcMgr: %PROCMGR-6-TERMINATE_RUNNING_PROCESS: Terminating deconfigured/reconfigured process 'SystemInitMonitor' (PID=874)
+Oct 12 13:42:14 HUB-1 ProcMgr: %PROCMGR-7-WORKER_WARMSTART_DONE: ProcMgr worker warm start done. (PID=570)
+Oct 12 13:42:14 HUB-1 ProcMgr: %PROCMGR-6-PROCESS_TERMINATED: 'SystemInitMonitor' (PID=874, status=-9) has terminated.

@@ -1,0 +1,34 @@
+# THE source of truth for every change an agent may propose.
+# Agents never write CLI. They pick an entry, the playbook renders the commands for the device's network OS
+# from these templates, and the command gate rejects anything whose prefix is not in allowed_commands -- before
+# it is proposed. expected_post_state is executable: the validator and the executor run these checks.
+ospf_area_mismatch:
+  title: "OSPF area mismatch on the uplink"
+  root_cause: true
+  detect: "OSPF adjacency on uplink not FULL; interface area differs from neighbor"
+  params: {uplink: interface, expected_area: ospf_area, current_area: ospf_area}
+  fix:
+    eos:
+      - "interface {uplink}"
+      - "ip ospf area {expected_area}"
+  rollback:
+    eos:
+      - "interface {uplink}"
+      - "ip ospf area {current_area}"
+  allowed_commands:
+    eos: ["interface", "ip ospf area"]      # anything else = blocked
+  expected_post_state:
+    - {name: "ospf neighbor state = FULL", tool: ospf_neighbors, expect: {interface: "{uplink}", state: full},
+       backout: true}
+    - {name: "branch l3 reachable = true", tool: ping, args: {destination: "{service}", source: "{lan_gateway}"},
+       expect: {success: true}}
+
+interface_flap:
+  title: "Uplink interface flapping"
+  root_cause: false        # a symptom that recovers on its own; it does not explain a dead adjacency
+  detect: "uplink link-status changes above threshold"
+  params: {}
+  fix: {}                  # physical layer: ticket the carrier/optic. No configuration change.
+  rollback: {}
+  allowed_commands: {}
+  expected_post_state: []

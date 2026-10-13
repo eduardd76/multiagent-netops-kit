@@ -1,0 +1,19 @@
+# The workshop incident on real Arista cEOS (instructor demo). Healthy at deploy; ./break.sh injects the incident.
+# eAPI is published on the VM: BRANCH-7 :8011, HUB-1 :8021, BRANCH-8 :8012, HUB-2 :8022.
+# Same hostnames, interfaces and addresses as netops/data/incident.yaml, so the SAME agent code runs unchanged.
+name: netops
+mgmt:
+  network: netops-mgmt
+  ipv4-subnet: 172.31.97.0/24
+topology:
+  kinds:
+    arista_ceos:
+      image: ceos:4.34.8M          # BYO image: docker import cEOS-lab-<ver>.tar.xz ceos:<ver>
+  nodes:
+    branch7: {kind: arista_ceos, startup-config: configs/branch7.cfg, mgmt-ipv4: 172.31.97.11, ports: ["8011:80"]}
+    hub1:    {kind: arista_ceos, startup-config: configs/hub1.cfg,    mgmt-ipv4: 172.31.97.21, ports: ["8021:80"]}
+    branch8: {kind: arista_ceos, startup-config: configs/branch8.cfg, mgmt-ipv4: 172.31.97.12, ports: ["8012:80"]}
+    hub2:    {kind: arista_ceos, startup-config: configs/hub2.cfg,    mgmt-ipv4: 172.31.97.22, ports: ["8022:80"]}
+  links:
+    - {endpoints: ["branch7:eth1", "hub1:eth1"], mtu: 1500}     # MTU pinned: veth default 9500 would cause EXSTART
+    - {endpoints: ["branch8:eth1", "hub2:eth1"], mtu: 1500}

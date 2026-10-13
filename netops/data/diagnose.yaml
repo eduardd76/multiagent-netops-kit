@@ -1,0 +1,13 @@
+# the on-call engineer's ordered checks for "a branch lost the core service". The ORDER is the engineer's runbook:
+# outcome first (ping, route), then the adjacency, then BOTH ends of the link, then the noise, then the
+# healthy control site to diff against. The model reasons over this evidence; it does not pick the commands.
+skill: diagnose_branch_unreachable
+steps:
+  - {tool: ping,           args: {device: "{device}", destination: "{service}", source: "{lan_gateway}"}}
+  - {tool: route,          args: {device: "{device}", prefix: "{service_prefix}"}}
+  - {tool: ospf_neighbors, args: {device: "{device}"}}
+  - {tool: ospf_interface, args: {device: "{device}", interface: "{uplink}"}}
+  - {tool: ospf_interface, args: {device: "{peer}", interface: "{peer_interface}"}}
+  - {tool: interface,      args: {device: "{device}", interface: "{uplink}"}}
+  - {tool: log_summary,    args: {device: "{device}"}}
+  - {tool: ospf_neighbors, args: {device: "{control}"}}
