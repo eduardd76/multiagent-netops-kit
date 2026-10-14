@@ -62,13 +62,27 @@ class OpenAICompatLLM:
             from openai import OpenAI
             client = OpenAI(base_url=base_url, api_key=api_key, timeout=timeout, max_retries=1)
         self.client, self.model = client, model
+        self.sampling: dict[str, Any] = {"temperature": 0, "seed": 7}   # repeatable runs where the endpoint allows it
+
+    def _create(self, kwargs: dict):
+        """Some endpoints reject sampling settings (Claude 5.x: 'temperature is deprecated'). Drop the rejected one
+        once, remember it for this client, and carry on -- a lab must not fall back to the mock for a knob."""
+        while True:
+            try:
+                return self.client.chat.completions.create(**kwargs, **self.sampling)
+            except Exception as e:
+                rejected = [k for k in self.sampling if k in str(e)]
+                if getattr(e, "status_code", None) != 400 or not rejected:
+                    raise
+                for k in rejected:
+                    self.sampling.pop(k)
 
     def chat(self, *, role: str, messages: list[dict], tools: list[ToolSpec]) -> LLMReply:
-        kwargs: dict[str, Any] = {"model": self.model, "messages": messages, "temperature": 0, "seed": 7}
+        kwargs: dict[str, Any] = {"model": self.model, "messages": messages}
         if tools:
             kwargs["tools"] = [{"type": "function", "function": {"name": t.name, "description": t.description,
                                                                  "parameters": t.parameters}} for t in tools]
-        msg = self.client.chat.completions.create(**kwargs).choices[0].message
+        msg = self._create(kwargs).choices[0].message
         calls = []
         for tc in msg.tool_calls or []:
             try:

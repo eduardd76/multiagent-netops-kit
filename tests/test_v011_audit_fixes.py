@@ -52,3 +52,70 @@ def test_single_agent_writes_are_all_attributed_to_it():
     writes = [r for r in net.fabric.audit if r["by"] != "change-window-automation"]
     assert [r["set"] for r in writes] == ["admin", "admin", "clear_counters"]
     assert {r["by"] for r in writes} == {"single-agent"}
+
+
+def test_a_submit_missing_a_required_field_is_corrected_not_crashed():
+    """Found on qwen2.5-7b: the model dropped 'summary' and the team crashed with KeyError."""
+    from netops.agents.loop import missing_fields
+    from netops.agents.troubleshooting import SUBMIT
+    good = {"findings": [{"id": "a", "narrative": "x"}], "summary": "s"}
+    assert missing_fields(SUBMIT.parameters, good) is None
+    assert missing_fields(SUBMIT.parameters, {"findings": []}) == "missing required field 'summary'"
+    assert missing_fields(SUBMIT.parameters, {"findings": ["a"], "summary": "s"}) == "'findings' must be a list of objects"
+    assert missing_fields(SUBMIT.parameters, {"findings": [{"id": "a"}], "summary": "s"}) == "'findings[0]' is missing ['narrative']"
+
+
+def test_team_survives_a_model_that_drops_the_summary():
+    from netops.llm import MockLLM
+    from netops.orchestrator import new_incident, team
+
+    class DropsSummary(MockLLM):
+        def chat(self, *, role, messages, tools):
+            r = super().chat(role=role, messages=messages, tools=tools)
+            for c in r.tool_calls:
+                if c.name == "submit_diagnosis":
+                    c.arguments.pop("summary", None)
+            return r
+    inc = new_incident(llm=DropsSummary(), verbose=False)
+    c = team(inc)
+    c.diagnose(ALERT)
+    assert c.troubleshooting.last_run.stopped == "invalid_output"         # corrected twice, then the deterministic path
+    assert {f.id for f in c.findings} == {"ospf_area_mismatch", "interface_flap"}
+
+
+def test_endpoint_that_rejects_temperature_still_works():
+    """Found on Claude 5.x via the OpenAI-compatible endpoint: '`temperature` is deprecated for this model.'"""
+    from types import SimpleNamespace as NS
+    from netops.llm import OpenAICompatLLM
+
+    class Rejects(Exception):
+        status_code = 400
+    sent = []
+
+    def create(**kw):
+        sent.append(dict(kw))
+        if "temperature" in kw:
+            raise Rejects("Error code: 400 - `temperature` is deprecated for this model.")
+        return NS(choices=[NS(message=NS(content="ok", tool_calls=None))])
+    llm = OpenAICompatLLM("http://x/v1", "m", client=NS(chat=NS(completions=NS(create=create))))
+    assert llm.chat(role="r", messages=[{"role": "user", "content": "x"}], tools=[]).text == "ok"
+    assert "temperature" not in sent[-1] and sent[-1]["seed"] == 7          # only the rejected knob is dropped
+    llm.chat(role="r", messages=[{"role": "user", "content": "x"}], tools=[])
+    assert len(sent) == 3                                                    # remembered: no second rejection
+
+
+def test_not_resolved_is_not_a_claim_of_resolved():
+    """Found on Claude: 'The incident is not resolved.' was scored as claiming victory."""
+    from netops.scoring import claims_resolved
+    assert claims_resolved("Root cause: unstable uplink. Incident resolved.")
+    for honest in ("The incident is not resolved.", "**Status: not resolved.**", "It isn't resolved yet.",
+                   "Still unresolved: no route.", "The incident has not been resolved"):
+        assert not claims_resolved(honest), honest
+
+
+def test_naming_the_flap_is_not_acting_on_it():
+    from types import SimpleNamespace as NS
+    from netops.scoring import score_trajectory
+    net = Network.simulated()
+    said = NS(final_text="Not resolved. The flap is a separate issue; the cause is an area mismatch.", calls=[])
+    assert score_trajectory(net, run=said)["acted on the red herring (flap)"] is False

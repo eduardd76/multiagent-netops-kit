@@ -26,6 +26,26 @@ class AgentRun(BaseModel):
     stopped: str = ""
 
 
+def missing_fields(schema: dict, answer) -> str | None:
+    """The submit tool's own schema, enforced: required fields present, object items really objects.
+    A live model sometimes drops a field; the loop sends that back as a correction instead of crashing later."""
+    if not isinstance(answer, dict):
+        return "the answer must be a JSON object"
+    for key in schema.get("required", []):
+        if key not in answer:
+            return f"missing required field '{key}'"
+    for key, prop in schema.get("properties", {}).items():
+        items = prop.get("items", {}) if prop.get("type") == "array" else {}
+        if items.get("type") == "object" and key in answer:
+            if not isinstance(answer[key], list) or not all(isinstance(x, dict) for x in answer[key]):
+                return f"'{key}' must be a list of objects"
+            for n, x in enumerate(answer[key]):
+                gone = [r for r in items.get("required", []) if r not in x]
+                if gone:
+                    return f"'{key}[{n}]' is missing {gone}"
+    return None
+
+
 def run_agent(llm: LLM, *, role: str, system: str, task: str, toolbox: ToolBox | None = None,
               submit: ToolSpec | None = None, validate: Callable[[dict], str | None] | None = None,
               max_turns: int = 10, trace: Callable[[str, str], None] | None = None) -> AgentRun:
@@ -54,7 +74,7 @@ def run_agent(llm: LLM, *, role: str, system: str, task: str, toolbox: ToolBox |
             break
         for c in reply.tool_calls:
             if submit and c.name == submit.name:
-                problem = validate(c.arguments) if validate else None
+                problem = missing_fields(submit.parameters, c.arguments) or (validate(c.arguments) if validate else None)
                 if problem:
                     run.invalid_outputs.append(problem)
                     content = f"ERROR: invalid {submit.name}: {problem}. Fix it and call {submit.name} again."

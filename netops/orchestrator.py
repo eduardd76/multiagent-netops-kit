@@ -10,6 +10,7 @@ from netops.evidence import EvidenceStore
 from netops.llm import LLM, make_llm
 from netops.network import Network
 from netops.protocol import Bus
+from netops.scoring import claims_resolved
 from netops.trace import Trace
 
 ALERT = ("P1 -- users at BRANCH-7 cannot reach the core service 10.100.10.10. The dashboard is green: "
@@ -49,7 +50,7 @@ def run_lab1(inc: Incident) -> dict:
     writes = [c for c in run.calls if c["tool"] in ("bounce_interface", "clear_counters") and c["ok"]]
     last = max((i for i, c in enumerate(run.calls) if c in writes), default=-1)
     verified = any(c["tool"] in ("ping", "route") and c["ok"] for c in run.calls[last + 1:]) if writes else False
-    return {"agent_says": run.final_text, "claimed_resolved": "resolved" in run.final_text.lower(),
+    return {"agent_says": run.final_text, "claimed_resolved": claims_resolved(run.final_text),
             "reachability": inc.network.reachability(), "writes": [c["tool"] for c in writes],
             "verified_outcome_after_its_change": verified, "human_approved": False,
             "independent_check": False, "model": sorted(set(run.sources))}

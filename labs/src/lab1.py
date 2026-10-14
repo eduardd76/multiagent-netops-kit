@@ -59,10 +59,11 @@ def book() -> LabBook:
         """)
     b.md("""
         ## The wall
-        The flap was real. The fix was valid. And it changed nothing: the agent cleared the loudest symptom, graded its
-        own work, and declared victory -- while users still can't reach the core. *Confidently, articulately wrong.*
+        The flap was real. The agent acted on it -- on a production router, with nobody's approval -- and users still
+        can't reach the core. Whether it then claimed victory (the stand-in does) or admitted it wasn't fixed (Claude
+        Haiku did, in every rehearsal run), it changed the network before anything checked the outcome.
 
-        Notice what was missing: no second opinion, no check of the outcome, no human between the agent and the router.
+        Notice what was missing: no second opinion, no check before it acted, no human between the agent and the router.
 
         > The loudest log is not the outage.
 
@@ -134,7 +135,7 @@ def book() -> LabBook:
          """Not proven. Correlation in time is not causation. In this incident the flap is real but the earlier
          flaps recovered on their own; the outage persists because the OSPF areas disagree. You need evidence
          that explains *why the adjacency stays down*, not just something that happened just before."""),
-        ("""The agent says "Incident resolved" while `reachability()` is FAIL. What would have caught it?""",
+        ("""The agent changed the router, and `reachability()` is still FAIL -- whatever it said. What would have caught it?""",
          """An independent check of the *outcome* (users reach the service), run by something other than the
          agent that made the change -- and allowed to gate the status. "Resolved" should be a result of
          validation, not a sentence the model writes."""),
