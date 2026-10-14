@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "netops"
-version = "0.1.0"
+version = "0.1.1"
 description = "Build multi-agent AI systems for network operations: a team of agents, a playbook, and a human gate."
 readme = "README.md"
 requires-python = ">=3.11"

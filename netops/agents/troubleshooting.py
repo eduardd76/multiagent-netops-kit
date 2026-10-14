@@ -140,7 +140,7 @@ class TroubleshootingAgent:
             for f in found:
                 f.narrative = notes[f.id]
             return found, run.submitted["summary"]
-        self.trace(self.name, "model output invalid -> deterministic findings kept as detected")
+        self.trace(self.name, f"no valid model answer ({run.stopped}) -> deterministic findings kept as detected")
         for f in found:
             f.narrative = f"{f.title} (deterministic detector)"
         return sorted(found, key=lambda f: not f.explains_outage), "deterministic diagnosis"

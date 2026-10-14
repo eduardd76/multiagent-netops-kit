@@ -119,7 +119,11 @@ class Network:
     def configure(self, device: str, cmds: list[str], *, by: str) -> ConfigResult:
         return self._dev(device).configure(cmds, by=by)
 
-    def clear_counters(self, device: str, interface: str | None = None) -> None:
+    def clear_counters(self, device: str, interface: str | None = None, *, by: str = "operator") -> None:
+        if self.fabric is not None:                  # simulated: record who did it in the device audit
+            name = self.reader(device).normalize_interface(interface) if interface else None
+            self.fabric.clear_counters(device, name, by=by)
+            return
         self.reader(device).clear_counters(self._dev(device), interface)
 
 

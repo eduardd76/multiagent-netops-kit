@@ -75,4 +75,6 @@ def run_agent(llm: LLM, *, role: str, system: str, task: str, toolbox: ToolBox |
         if len(run.invalid_outputs) >= 2:
             run.stopped = "invalid_output"
             break
+    if run.stopped == "max_turns":
+        say(role, f"stopped: hit the {max_turns}-turn cap without an answer -- hand this to a person")
     return run

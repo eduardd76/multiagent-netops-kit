@@ -110,7 +110,7 @@ def scorecard(single: dict, team: dict) -> str:
 # --------------------------------------------------------------------------- the bill
 class Meter:
     """Wraps an LLM. Counts every turn and every character sent to the model (a rough proxy for input tokens:
-    ~4 characters per token for English and CLI output). A live endpoint also reports real token usage."""
+    ~4 characters per token for English and CLI output). Real token usage from a live endpoint is not read yet."""
 
     def __init__(self, llm):
         self.llm, self.turns, self.chars, self.by_role = llm, 0, 0, {}

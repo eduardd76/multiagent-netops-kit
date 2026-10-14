@@ -50,7 +50,7 @@ UNGATED_TOOLS: dict[str, tuple[str, dict, Callable]] = {
                                                    by="single-agent"))[-1].applied),
     "clear_counters": ("clear counters on an interface. Applies immediately.",
                        _schema({"device": _D, "interface": _I}, ["device", "interface"]),
-                       lambda n, a: n.clear_counters(a["device"], a["interface"]) or "counters cleared"),
+                       lambda n, a: n.clear_counters(a["device"], a["interface"], by="single-agent") or "counters cleared"),
 }
 
 
