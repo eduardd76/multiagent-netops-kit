@@ -56,35 +56,24 @@ The same seven read tools, served over MCP to any client (Claude Code, Claude De
 No write tool exists in it, the network behind it is a read-only view, and device output is wrapped as untrusted data.
 
 ```bash
-pip install "netops[mcp] @ git+https://github.com/eduardd76/multiagent-netops-kit@v0.1.2"
+pip install "netops[mcp] @ git+https://github.com/eduardd76/multiagent-netops-kit@v0.1.5"
 claude mcp add netops -- python -m netops.mcp_server          # the simulated incident: BRANCH-7 is down
 # real cEOS: set NETOPS_CEOS_HOSTS="BRANCH-7=clab.orb.local:8011,HUB-1=clab.orb.local:8021,..." for the server
 ```
 
-## Customer demos: six ports, one file per customer
-The same team runs a customer's demo from one YAML file. Nothing in `netops/` changes per customer.
+## Extending the kit: six ports
+`netops/ports.py` defines the six shapes an adapter implements: Inventory, DeviceDriver + Reader, EvidenceSource,
+ChangeExecutor, ApprovalChannel, AuditSink. Agents never import an adapter -- only these shapes.
+`ports.as_tool(source)` turns any EvidenceSource into one more read-only runbook step for the troubleshooting agent.
 
-    from netops.wiring import build
-    inc = build("customers/acme.yaml")       # see examples/customer.example.yaml
-
-| Port (netops/ports.py) | Default | Demo adapters |
-|---|---|---|
-| Inventory | incident.yaml | NetBox export file |
-| DeviceDriver + Reader | simulated cEOS / cEOS eAPI + EOS reader | more vendors in Plan 4b/4c |
-| EvidenceSource | the device's own logs | mock Splunk, mock Loki |
-| ChangeExecutor | the executor (re-renders and re-checks in demo mode) | -- |
-| ApprovalChannel | the notebook | mock ServiceNow CR, mock Jira Service Management |
-| AuditSink | memory / JSONL | mock ServiceNow incident, mock Confluence page |
-
-Every mock prints "mock <System> - real formats, no connection". In demo mode approvals come only through the channel
-(`gate.submit(inc.channel)`, then `gate.resolve(inc.channel, ticket)`) and the presenter can't approve, specialists and
-evidence sources get a read-only network, writes go only to lab devices, Lab 1's ungated agent is off, and the executor
-re-renders the fix and the rollback and re-checks before applying.
+In hardened mode (`Coordinator(..., demo=True)`) approvals come only through an external approval channel
+(`gate.submit(channel)`, then `gate.resolve(channel, ticket)`), the requester can't approve their own change, writes go
+only to lab devices, and the executor re-renders the fix and the rollback and re-checks before applying.
 
 ## Code map (read in this order)
 `netops/device/` (driver, fabric state machine, simulated cEOS, real cEOS over eAPI) → `parsers.py` → `network.py`
 → `playbook.py` + `playbook.yaml` → `protocol.py` → `llm.py` → `agents/` (`loop`, `tools`, `single`,
-`troubleshooting`, `config`, `validation`, `coordinator`) → `executor.py`, `approval.py`, `checklist.py` → `orchestrator.py` → `scoring.py` (trajectory scorecard + cost table). Customer-pack path: `ports.py` → `readers/` → `inventory.py` → `checks.py` → `channels.py`, `audit.py`, `sources.py` → `skin.py` → `wiring.py`.
+`troubleshooting`, `config`, `validation`, `coordinator`) → `executor.py`, `approval.py`, `checklist.py` → `orchestrator.py` → `scoring.py` (trajectory scorecard + cost table). Extension points: `ports.py` → `readers/` → `inventory.py` → `checks.py` → `audit_emit.py`.
 
 ## Develop
 ```bash

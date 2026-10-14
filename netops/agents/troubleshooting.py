@@ -14,8 +14,8 @@ from netops.evidence import EvidenceStore
 from netops.llm import LLM, ToolSpec
 from netops.network import Network
 from netops.playbook import load_playbook
+from netops.ports import as_tool
 from netops.protocol import Message
-from netops.sources import as_tool
 
 ALLOW = ["ping", "route", "ospf_neighbors", "ospf_interface", "interface", "log_summary"]
 FLAP_THRESHOLD = 4
@@ -107,7 +107,7 @@ class TroubleshootingAgent:
             tools = ToolBox(self.net, self.ev, ALLOW, agent=self.name)
         self.trace(self.name, "running the runbook: ping -> route -> neighbors -> BOTH ends -> interface -> logs -> control")
         got = run_runbook(tools, p)
-        for name in extra:                                    # each customer source is one more runbook step
+        for name in extra:                                    # each extra evidence source is one more runbook step
             before = len(tools.calls)
             out = tools.call(name, {"device": p["device"]})
             if len(tools.calls) == before:                    # the source failed: say so, cite nothing

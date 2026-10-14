@@ -28,7 +28,7 @@ class Incident:
     evidence: EvidenceStore = field(default_factory=EvidenceStore)
     bus: Bus = field(default_factory=Bus)
     approvals: Approvals = field(default_factory=Approvals)
-    pack: object = None              # wiring.Pack in customer mode
+    pack: object = None              # a pack object in hardened mode (None = the workshop)
     skin: object = None
     channel: object = None           # an ApprovalChannel
     audit: object = None             # an AuditSink (Fanout)
@@ -38,14 +38,14 @@ class Incident:
 def new_incident(variant: str | None = None, llm: LLM | None = None, network: Network | None = None,
                  verbose: bool = True) -> Incident:
     """A fresh, isolated world: new network state, new evidence, new approvals (old tokens can't be reused)."""
-    from netops import render                   # a customer pack built earlier must not skin the workshop
+    from netops import render                   # a display mapping set earlier must not skin the workshop
     render.configure(None)
     return Incident(network=network or Network.simulated(variant), llm=llm or make_llm(), trace=Trace(verbose))
 
 
 def run_lab1(inc: Incident) -> dict:
     if inc.pack is not None:                    # its tools write with no playbook, no gate, no human
-        raise GateError("Lab 1's ungated agent is not available in customer mode")
+        raise GateError("Lab 1's ungated agent is not available in hardened mode")
     run = SingleAgent(inc.llm, inc.network, inc.evidence).run(ALERT, trace=inc.trace)
     writes = [c for c in run.calls if c["tool"] in ("bounce_interface", "clear_counters") and c["ok"]]
     last = max((i for i, c in enumerate(run.calls) if c in writes), default=-1)

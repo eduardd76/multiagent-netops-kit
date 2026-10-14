@@ -1,14 +1,15 @@
 # kit/netops/ports.py
-"""The six ports. Read this file to extend the kit: implement one of these protocols, register it in
-netops/wiring.py, and name it in a customer pack. Agents never import an adapter -- only these shapes.
+"""The six ports. Read this file to extend the kit: implement one of these protocols and pass the adapter in
+(Incident / Coordinator take sources, audit and an approval channel). Agents never import an adapter -- only
+these shapes.
 
-  Inventory       devices, links and intent              (default: incident.yaml)
+  Inventory       devices, links and intent              (default: incident.yaml, netops/inventory.py)
   DeviceDriver    how to talk to a device                 (netops/device/driver.py)
   Reader          how to interpret what a device says     (netops/readers/)
-  EvidenceSource  observations from outside the device    (netops/sources.py)
+  EvidenceSource  observations from outside the device    (as_tool() makes one an agent tool)
   ChangeExecutor  the only writer                         (netops/executor.py)
-  ApprovalChannel where the human decides                 (netops/channels.py)
-  AuditSink       where the record of every action goes   (netops/audit.py)
+  ApprovalChannel where the human decides                 (Coordinator gate: submit() / resolve())
+  AuditSink       where the record of every action goes   (netops/audit_emit.py dispatches to it)
 """
 from __future__ import annotations
 
@@ -92,6 +93,16 @@ class EvidenceSource(Protocol):
     description: str
 
     def query(self, device: str, *, limit: int = 400) -> list[EvidenceItem]: ...
+
+
+_SOURCE_SCHEMA = {"type": "object", "properties": {"device": {"type": "string"}, "limit": {"type": "integer"}},
+                  "required": ["device"], "additionalProperties": False}
+
+
+def as_tool(source: EvidenceSource) -> tuple[str, tuple]:
+    """Any EvidenceSource as one more read tool for an agent: (name, (description, schema, handler))."""
+    return source.name, (source.description, _SOURCE_SCHEMA,
+                         lambda n, a: source.query(a["device"], limit=int(a.get("limit", 400))))
 
 
 # ---------------------------------------------------------------- the writer

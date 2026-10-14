@@ -1,18 +1,20 @@
+"""Evidence beyond the device CLI: any EvidenceSource becomes a runbook step (ports.as_tool), and the
+evidence fence marks device data as data."""
 from netops.evidence import EvidenceStore
 from netops.network import Network
-from netops.sources import MockLoki, MockSplunk, as_tool
+from netops.ports import EvidenceItem
 
 
-def test_splunk_and_loki_speak_their_formats():
-    net = Network.simulated()
-    s, l = MockSplunk(net), MockLoki(net)
-    items = s.query("BRANCH-7", limit=5)
-    assert len(items) == 5 and items[0].source == "mock Splunk - real formats, no connection"
-    raw = s.raw("BRANCH-7", 2)
-    assert set(raw["results"][0]) >= {"_time", "host", "_raw", "index"}
-    lr = l.raw("BRANCH-7", 2)
-    assert lr["status"] == "success" and lr["data"]["resultType"] == "streams"
-    assert lr["data"]["result"][0]["stream"] == {"host": "BRANCH-7"} and len(lr["data"]["result"][0]["values"]) == 2
+class SyslogSource:
+    """A minimal EvidenceSource: the lab's own syslog, as an external log store would return it."""
+    name, description = "syslog_search", "Search a log store for a device's syslog, newest last."
+
+    def __init__(self, net):
+        self.net = net
+
+    def query(self, device, *, limit=400):
+        return [EvidenceItem(ts=l.ts.isoformat(), device=device, source="log store", text=l.text)
+                for l in self.net.logs(device)[-limit:]]
 
 
 def test_a_source_becomes_a_runbook_step_for_troubleshooting():
@@ -21,9 +23,9 @@ def test_a_source_becomes_a_runbook_step_for_troubleshooting():
     from netops.agents.coordinator import Coordinator
     inc = new_incident(llm=MockLLM(), verbose=False)
     c = Coordinator(inc.network, inc.llm, bus=inc.bus, evidence=inc.evidence, approvals=inc.approvals,
-                    trace=inc.trace, sources=[MockSplunk(inc.network)])
+                    trace=inc.trace, sources=[SyslogSource(inc.network)])
     findings = c.diagnose(ALERT)
-    assert "splunk_search" in [e.tool for e in inc.evidence.all()]
+    assert "syslog_search" in [e.tool for e in inc.evidence.all()]
     assert {f.id for f in findings} == {"interface_flap", "ospf_area_mismatch"}
 
 
@@ -53,15 +55,15 @@ def test_a_failing_source_is_traced_and_cites_no_evidence():
     from netops.orchestrator import ALERT, new_incident
     from netops.agents.coordinator import Coordinator
 
-    class Down(MockSplunk):
+    class Down(SyslogSource):
         def query(self, device, *, limit=400):
-            raise ConnectionError("splunk unreachable")
+            raise ConnectionError("log store unreachable")
 
     inc = new_incident(llm=MockLLM(), verbose=False)
     c = Coordinator(inc.network, inc.llm, bus=inc.bus, evidence=inc.evidence, approvals=inc.approvals,
                     trace=inc.trace, sources=[Down(inc.network)])
     findings = c.diagnose(ALERT)
-    assert "splunk_search" not in [e.tool for e in inc.evidence.all()]
-    assert any(w == "troubleshooting" and "splunk_search" in t and "splunk unreachable" in t
+    assert "syslog_search" not in [e.tool for e in inc.evidence.all()]
+    assert any(w == "troubleshooting" and "syslog_search" in t and "log store unreachable" in t
                for w, t in inc.trace.lines)
     assert {f.id for f in findings} == {"interface_flap", "ospf_area_mismatch"}

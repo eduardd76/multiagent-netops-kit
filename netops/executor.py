@@ -26,7 +26,7 @@ class Executor:
         self.allowed_devices, self.playbook, self.recheck, self.audit = allowed_devices, playbook, recheck, audit
 
     def _refuse_unless_safe(self, proposal: dict) -> None:
-        """Demo/customer mode: the token is not enough. Re-derive the change and re-check the world first."""
+        """Hardened mode: the token is not enough. Re-derive the change and re-check the world first."""
         dev = proposal["device"]
         if self.allowed_devices is not None and dev not in self.allowed_devices:
             raise GateError(f"{dev} is not on the lab allowlist -- refusing to write")

@@ -1,15 +1,33 @@
 import pytest
 
-from netops.approval import Approvals, GateError
+from netops.approval import Approvals, GateError, digest_of
 from netops.llm import FallbackLLM, MockLLM
 from netops.network import Network
 from netops.orchestrator import ALERT, ONCALL_REJECT, new_incident, team
+from netops.ports import ApprovalTicket, Decision
+
+
+class StubChannel:
+    """A minimal ApprovalChannel: the decision lives in the ticket record and is read back from it."""
+    name = "stub"
+
+    def request(self, proposal, pre_checks):
+        return ApprovalTicket(id="REQ0001", channel=self.name, digest=digest_of(proposal),
+                              version=proposal["version"], record={"decision": None})
+
+    def decide(self, ticket, *, approve, by, reason=""):
+        ticket.record["decision"] = {"approve": approve, "by": by, "reason": reason}
+
+    def decision(self, ticket):
+        d = ticket.record["decision"]
+        if d is None:
+            return Decision("pending")
+        return Decision("approved" if d["approve"] else "rejected", d["by"], d["reason"])
 
 
 def via_channel(g, who):
-    """Demo mode: the approval comes through the channel, never a direct gate.approve()."""
-    from netops.channels import NotebookApproval
-    ch = NotebookApproval()
+    """Hardened mode: the approval comes through the channel, never a direct gate.approve()."""
+    ch = StubChannel()
     t = g.submit(ch)
     ch.decide(t, approve=True, by=who)
     return g.resolve(ch, t)
@@ -88,10 +106,7 @@ def test_default_mode_still_approves_directly():
 
 
 def test_resolve_refuses_an_unknown_decision_state():
-    from netops.channels import NotebookApproval
-    from netops.ports import Decision
-
-    class Odd(NotebookApproval):
+    class Odd(StubChannel):
         def decision(self, ticket):
             return Decision("cancelled", "Camille", "")
 

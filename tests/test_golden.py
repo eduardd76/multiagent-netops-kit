@@ -1,5 +1,5 @@
 # kit/tests/test_golden.py
-"""Pins every kit output the speaker script quotes (default configuration, MockLLM). Plan 4a must not change any of
+"""Pins every kit output the speaker script quotes (default configuration, MockLLM). A refactor must not change any of
 it. Regenerate ONLY on purpose: NETOPS_UPDATE_GOLDEN=1 .venv/bin/pytest tests/test_golden.py"""
 import json
 import os

@@ -38,7 +38,7 @@ class Evidence(BaseModel):
 class EvidenceStore:
     def __init__(self, fence: bool = False):
         self._items: dict[str, Evidence] = {}
-        self.fence = fence            # customer mode: device data is wrapped and labelled as data, not instructions
+        self.fence = fence            # hardened mode: device data is wrapped and labelled as data, not instructions
 
     def add(self, tool: str, args: dict, result: Any) -> Evidence:
         ev = Evidence(id=f"ev_{len(self._items) + 1:02d}", tool=tool, args=dict(args), result=_dump(result))

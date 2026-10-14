@@ -7,7 +7,7 @@ _SKIN = None
 
 
 def configure(skin=None) -> None:
-    """Customer mode: every panel prints the customer's names."""
+    """Display mapping: every panel prints through skin.display() (None = canonical names)."""
     global _SKIN
     _SKIN = skin
 
@@ -30,7 +30,7 @@ def dashboard(reachability: str | None) -> None:
 
 def llm_label(llm) -> str:
     if hasattr(llm, "inner"):
-        return llm_label(llm.inner) + " -- customer names, secrets redacted"
+        return llm_label(llm.inner) + " -- names mapped, secrets redacted"
     name = type(llm).__name__
     if name == "MockLLM":
         return "MockLLM (deterministic stand-in -- not a model)"
