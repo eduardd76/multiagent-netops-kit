@@ -51,6 +51,16 @@ A model that answers "maybe it's DNS" still ends in a correct, human-approved fi
 - **Independent validation.** It runs before the human sees the change (playbook match, fault still present, blast
   radius evidenced on both ends) and after the change (polls until FULL + reachable, because real convergence takes 9–16 s).
 
+## Read-only MCP server
+The same seven read tools, served over MCP to any client (Claude Code, Claude Desktop, an IDE, your own agent).
+No write tool exists in it, the network behind it is a read-only view, and device output is wrapped as untrusted data.
+
+```bash
+pip install "netops[mcp] @ git+https://github.com/eduardd76/multiagent-netops-kit@v0.1.2"
+claude mcp add netops -- python -m netops.mcp_server          # the simulated incident: BRANCH-7 is down
+# real cEOS: set NETOPS_CEOS_HOSTS="BRANCH-7=clab.orb.local:8011,HUB-1=clab.orb.local:8021,..." for the server
+```
+
 ## Customer demos: six ports, one file per customer
 The same team runs a customer's demo from one YAML file. Nothing in `netops/` changes per customer.
 

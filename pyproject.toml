@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "netops"
-version = "0.1.1"
+version = "0.1.2"
 description = "Build multi-agent AI systems for network operations: a team of agents, a playbook, and a human gate."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -12,7 +12,11 @@ license = {text = "Apache-2.0"}
 dependencies = ["pydantic>=2.6", "pyyaml>=6", "openai>=1.40"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "nbformat>=5.10", "nbclient>=0.10", "ipykernel>=6.29"]
+mcp = ["mcp>=2.3,<3"]                     # the read-only MCP server (netops.mcp_server); not needed in Colab
+dev = ["pytest>=8", "nbformat>=5.10", "nbclient>=0.10", "ipykernel>=6.29", "mcp>=2.3,<3"]
+
+[project.scripts]
+netops-mcp = "netops.mcp_server:main"
 
 [tool.setuptools.packages.find]
 include = ["netops*"]
