@@ -121,3 +121,43 @@ def test_naming_the_flap_is_not_acting_on_it():
     net = Network.simulated()
     said = NS(final_text="Not resolved. The flap is a separate issue; the cause is an area mismatch.", calls=[])
     assert score_trajectory(net, run=said)["acted on the red herring (flap)"] is False
+
+
+def test_setup_line_tells_a_bad_key_from_a_good_one(capsys):
+    """Found 2026-10-14: a wrong key still printed 'live endpoint (...)' and every answer silently came from the mock."""
+    from netops import render
+    from netops.llm import FallbackLLM
+
+    class Rejects(Exception):
+        status_code = 401
+
+    class Bad:
+        model, calls = "some-model", 0
+        def chat(self, **kw):
+            Bad.calls += 1
+            raise Rejects("Error code: 401 - authentication_error")
+
+    class Good:
+        model = "some-model"
+        def chat(self, **kw): return LLMReply(text="ok", source="live:some-model")
+
+    assert render.llm_status(FallbackLLM(Good())) == "live endpoint (some-model) - connected"
+    bad = FallbackLLM(Bad())
+    line = render.llm_status(bad)
+    assert line.startswith("some-model FAILED (401 - the key was rejected) - running on the MockLLM stand-in")
+    calls = Bad.calls
+    reply = bad.chat(role="single-agent", messages=[{"role": "user", "content": "x"}], tools=[])
+    assert Bad.calls == calls and reply.source.startswith("mock (fallback")      # no more calls to a known-bad key
+
+
+def test_a_mid_run_failure_is_announced_once(capsys):
+    from netops.llm import FallbackLLM
+
+    class Flaky:
+        model = "some-model"
+        def chat(self, **kw): raise TimeoutError("read timed out")
+    llm = FallbackLLM(Flaky())
+    for _ in range(3):
+        llm.chat(role="troubleshooting", messages=[{"role": "user", "content": "x"}], tools=[])
+    out = capsys.readouterr().out
+    assert out.count("[!] live endpoint failed") == 1 and "MockLLM stand-in, not some-model" in out

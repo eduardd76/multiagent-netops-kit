@@ -189,18 +189,43 @@ class FallbackLLM:
     def __init__(self, primary: LLM, fallback: LLM | None = None, allow_fallback: bool = True):
         self.primary, self.fallback, self.allow_fallback = primary, fallback or MockLLM(), allow_fallback
         self.events: list[dict] = []
+        self.primary_ok: bool | None = None        # None = not probed; False = probe failed, go straight to the stand-in
+        self.problem = ""
+
+    def probe(self) -> bool:
+        """One tiny call, so a bad key or URL shows up at setup -- not as a stand-in answer passing for the model's."""
+        try:
+            self.primary.chat(role="setup", messages=[{"role": "user", "content": "Reply with: ok"}], tools=[])
+            self.primary_ok, self.problem = True, ""
+        except Exception as e:
+            self.primary_ok, self.problem = False, short_error(e)
+        return self.primary_ok
 
     def chat(self, *, role: str, messages: list[dict], tools: list[ToolSpec]) -> LLMReply:
-        try:
-            return self.primary.chat(role=role, messages=messages, tools=tools)
-        except Exception as e:                     # endpoint down, timeout, auth...
-            if not self.allow_fallback:
-                raise RuntimeError(f"live endpoint failed for {role} and the stand-in model is not allowed here: "
-                                   f"{type(e).__name__}") from e
-            self.events.append({"role": role, "reason": f"{type(e).__name__}: {e}"[:200]})
-            reply = self.fallback.chat(role=role, messages=messages, tools=tools)
-            reply.source = f"mock (fallback: live endpoint failed for {role})"
-            return reply
+        if self.primary_ok is not False:
+            try:
+                return self.primary.chat(role=role, messages=messages, tools=tools)
+            except Exception as e:                 # endpoint down, timeout, auth...
+                if not self.allow_fallback:
+                    raise RuntimeError(f"live endpoint failed for {role} and the stand-in model is not allowed here: "
+                                       f"{type(e).__name__}") from e
+                self.events.append({"role": role, "reason": f"{type(e).__name__}: {e}"[:200]})
+                if len(self.events) == 1:          # say it once, loudly: what follows is not the model
+                    print(f"[!] live endpoint failed for {role} ({short_error(e)}) -- answers from here on come "
+                          f"from the MockLLM stand-in, not {getattr(self.primary, 'model', 'the model')}.")
+        reply = self.fallback.chat(role=role, messages=messages, tools=tools)
+        reply.source = f"mock (fallback: live endpoint failed for {role})"
+        return reply
+
+
+def short_error(e: Exception) -> str:
+    """'401 - the key was rejected' beats a page of JSON for a room of attendees."""
+    code = getattr(e, "status_code", None)
+    hint = {401: "the key was rejected", 403: "the key has no access to this model", 404: "unknown model or URL",
+            429: "rate limited -- tell the instructor"}.get(code)
+    if code and hint:
+        return f"{code} - {hint}"
+    return f"{type(e).__name__}: {str(e)[:80]}"
 
 
 def make_llm(mode: str | None = None) -> LLM:

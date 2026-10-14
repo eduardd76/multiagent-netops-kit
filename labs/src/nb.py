@@ -9,7 +9,7 @@ import nbformat
 from nbformat.v4 import new_code_cell, new_markdown_cell, new_notebook
 
 REPO = "eduardd76/multiagent-netops-kit"
-REF = "v0.1.5"
+REF = "v0.1.6"
 PKG = Path(__file__).resolve().parents[2] / "netops"
 
 
@@ -23,7 +23,7 @@ def setup_cell() -> str:
         from netops.llm import make_llm
         from netops import render
         llm = make_llm()       # instructor endpoint if NETOPS_BASE_URL/NETOPS_MODEL/NETOPS_API_KEY are set, else MockLLM
-        print("LLM:", render.llm_label(llm))''')
+        print("LLM:", render.llm_status(llm))   # tests the endpoint once''')
 
 
 def writefile_cells() -> list:

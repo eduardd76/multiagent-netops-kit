@@ -39,6 +39,20 @@ def llm_label(llm) -> str:
     return name
 
 
+def llm_status(llm) -> str:
+    """The setup line: which model, and whether it actually answered. Probes a live endpoint once."""
+    inner = getattr(llm, "inner", llm)
+    if type(inner).__name__ == "FallbackLLM" and inner.primary_ok is None:
+        inner.probe()
+    if type(inner).__name__ == "FallbackLLM":
+        model = inner.primary.model
+        if inner.primary_ok:
+            return f"live endpoint ({model}) - connected"
+        return (f"{model} FAILED ({inner.problem}) - running on the MockLLM stand-in. "
+                f"Re-check NETOPS_BASE_URL, NETOPS_MODEL and NETOPS_API_KEY, then re-run this cell.")
+    return llm_label(llm)
+
+
 def transcript(bus: Bus, width: int = 70) -> None:
     _p(f"{'from':>16}    {'to':<16} {'intent':<9} {'status':<12} task")
     for m in bus.transcript:
