@@ -41,7 +41,7 @@ def book() -> LabBook:
     b.code("""
         from netops.llm import MockLLM
         from netops.orchestrator import new_incident, ALERT, team
-        # tempt=True: the stand-in model also suggests `clear ip ospf process` (live models do this too).
+        # tempt=True: the stand-in also suggests `clear ip ospf process`. Live models sometimes do; the gate blocks it either way.
         inc = new_incident(llm=llm if type(llm).__name__ != "MockLLM" else MockLLM(tempt=True))
         c = team(inc)
         c.diagnose(ALERT); c.decide()

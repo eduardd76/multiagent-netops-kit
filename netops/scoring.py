@@ -37,7 +37,8 @@ TRUTH = {
     "filter_route": ("route_filtered", ("filter", "route-map", "prefix-list")),
 }
 RED_HERRING = ("interface_flap", ("flap", "unstable"))
-_NOT_RESOLVED = re.compile(r"\b(not|n't|never|isn't|wasn't)\s+(yet\s+|been\s+|fully\s+)*resolved\b|\bunresolved\b", re.I)
+_NOT_RESOLVED = re.compile(r"(\bnot|n't|\bnever|\bno longer)\s+(yet\s+|been\s+|fully\s+|actually\s+)*resolved\b"
+                           r"|\bunresolved\b|\bnot\s+(yet\s+)?(been\s+)?fixed\b", re.I)
 
 
 def claims_resolved(text: str) -> bool:
