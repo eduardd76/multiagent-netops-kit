@@ -4,6 +4,8 @@ Students build a **team** of AI agents that resolves a live network incident on 
 fabric, entirely in Google Colab. The same agent code runs unchanged against real cEOS in containerlab
 (the instructor demo).
 
+**New here? Start with [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md)** - the network, the two ways to run it, what `netops` is, every folder and every cell, in plain words.
+
 ## The incident
 Branch **BRANCH-7** reaches its hub **HUB-1** over `Ethernet1` running OSPF.
 - **The trigger (loud):** the uplink flapped. `show logging` is full of up/down lines. The interface is up now.
@@ -56,7 +58,7 @@ The same seven read tools, served over MCP to any client (Claude Code, Claude De
 No write tool exists in it, the network behind it is a read-only view, and device output is wrapped as untrusted data.
 
 ```bash
-pip install "netops[mcp] @ git+https://github.com/eduardd76/multiagent-netops-kit@v0.1.7"
+pip install "netops[mcp] @ git+https://github.com/eduardd76/multiagent-netops-kit@v0.1.8"
 claude mcp add netops -- python -m netops.mcp_server          # the simulated incident: BRANCH-7 is down
 # real cEOS: set NETOPS_CEOS_HOSTS="BRANCH-7=clab.orb.local:8011,HUB-1=clab.orb.local:8021,..." for the server
 ```

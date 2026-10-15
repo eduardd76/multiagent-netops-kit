@@ -115,7 +115,60 @@ def artifacts(gate, approvals) -> None:
 
 
 def audit(network) -> None:
-    rows = network.fabric.audit if network.fabric else []
+    rows = network.audit
     _p("DEVICE CHANGE AUDIT")
     for a in rows or [{"ts": "-", "device": "-", "interface": "-", "set": "no changes", "to": "", "by": "-"}]:
         _p(f"  {a['ts']}  {a['device']} {a['interface']}  {a['set']} -> {a['to']}   by {a['by']}")
+
+
+def lab(net, show_area: bool = False, brief: bool = False) -> dict[str, str]:
+    """The lab at a glance, read-only: per device Ethernet1, OSPF neighbor and the service route, then per branch
+    the users' check (reachability) on a one-line map. show_area=False never asks for the OSPF area -- it is the
+    root cause the room finds in Lab 2. Works on the simulator and on real cEOS; returns {branch: PASS/FAIL}."""
+    from concurrent.futures import ThreadPoolExecutor
+    svc = net.service["prefix"]
+
+    def state(dev: str) -> dict:
+        try:
+            ifname = net.uplink(dev)["interface"]
+            eth, nbrs, rt = net.interface(dev, ifname), net.ospf_neighbors(dev), net.route(dev, svc)
+            row = {"eth": f"{ifname} {eth.line_protocol}",
+                   "nbr": ", ".join(f"{n.state.upper()} {n.neighbor_id}" for n in nbrs) or "none",
+                   "route": f"yes ({rt.route_type})" if rt.present else "MISSING"}
+            if show_area:
+                row["area"] = net.ospf_interface(dev, ifname).area
+            return row
+        except Exception as e:                       # device unreachable, timeout, auth: one row, no crash
+            return {"error": f"UNREACHABLE ({type(e).__name__})"}
+
+    devs = list(net.devices)
+    if net.fabric is None:                           # real devices: ask all four at once
+        with ThreadPoolExecutor(max_workers=len(devs)) as pool:
+            rows = dict(zip(devs, pool.map(state, devs)))
+    else:
+        rows = {d: state(d) for d in devs}
+    where = "the simulator" if net.fabric is not None else "real cEOS over eAPI"
+    if brief:                                        # one line: the users' check per branch
+        result = {d: net.reachability(d) for d, i in net.inventory.devices().items()
+                  if i.role == "branch" and "error" not in rows[d]}
+        _p(f"THE LAB -- {where}: " + ", ".join(f"{d} {r}" for d, r in result.items()))
+        return result
+    cols = [("eth", "UPLINK", 16), ("nbr", "OSPF NEIGHBOR", 16), ("route", f"ROUTE {svc}", 20)] + \
+        ([("area", "AREA", 8)] if show_area else [])
+    _p(f"THE LAB -- live from {where} (read-only)")
+    _p("  " + "DEVICE".ljust(10) + " ".join(h.ljust(w) for _, h, w in cols).rstrip())
+    for d, r in rows.items():
+        _p("  " + d.ljust(10) + (r["error"] if "error" in r else " ".join(str(r[k]).ljust(w) for k, _, w in cols)
+                                 .rstrip()))
+    result = {}
+    for d, info in net.inventory.devices().items():
+        if info.role != "branch" or d not in rows or "error" in rows[d]:
+            continue
+        peer = net.uplink(d)["peer"]
+        full = rows[d]["nbr"].startswith("FULL")
+        result[d] = net.reachability(d)
+        area = (lambda x: f" {rows[x].get('area', '?')}") if show_area else (lambda x: "")
+        _p(f"  users {info.lan_gateway} -- {d}{area(d)} {'==== OSPF FULL ====' if full else '---- no OSPF ------'}"
+           f"{area(peer)} {peer} -- service {net.service['address']} : {result[d]}"
+           + ("  <- incident" if d == net.affected else "  <- control"))
+    return result

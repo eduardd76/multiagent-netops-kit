@@ -11,42 +11,60 @@ def book() -> LabBook:
         6 flaps that recover, the silent area change, 12 flaps that don't). One cell per beat of the speaker script --
         run each cell when the script says so, not all at once. To re-arm afterwards: `ceos/reset.sh` then `ceos/break.sh`.
         """)
-    b.md("## 0 -- Connect (before the session)")
+    b.md("## 0 -- Connect to the real routers (before the session). Must print FAIL.")
     b.code("""
         from netops import render
+        from netops.clab import ContainerLab
         from netops.network import Network
-        from netops.orchestrator import ALERT, ONCALL_REJECT, contrast, new_incident, run_lab1, team
-        HOSTS = {"BRANCH-7": "clab.orb.local:8011", "HUB-1": "clab.orb.local:8021",     # eAPI published by containerlab
-                 "BRANCH-8": "clab.orb.local:8012", "HUB-2": "clab.orb.local:8022"}     # change to your lab host
-        net = Network.ceos(HOSTS)
+
+        HOSTS = {"BRANCH-7": "clab.orb.local:8011", "HUB-1": "clab.orb.local:8021",     # each router's API (eAPI),
+                 "BRANCH-8": "clab.orb.local:8012", "HUB-2": "clab.orb.local:8022"}     # published by containerlab
+        net = Network.ceos(HOSTS)                # the ONE line your Colab doesn't have: there it's Network.simulated()
+        lab = ContainerLab("netops", vm="clab")  # to type on the routers' own CLI (show and ping only)
         print("reachability() =", net.reachability(), "   <- must be FAIL before the session (ceos/break.sh)")
         """)
-    b.md("## Slide 3 (two_logs) -- the loudest log on BRANCH-7. Scroll it; do not point at the OSPF lines.")
+    b.md("## Slide 3 -- meet the lab. ONE cell: shift-enter once, then talk over the three blocks it prints.")
+    b.code("""
+        print("1/3  THE LAB IS REAL: 4 Arista cEOS routers in containerlab, on this laptop\\n")
+        lab.containers()
+
+        print("2/3  WHAT AN ENGINEER TYPES on the routers: the healthy branch first\\n")
+        for router, lan in [("BRANCH-8", "10.30.30.1"), ("BRANCH-7", "10.20.20.1")]:
+            lab.cli(router, "show ip ospf neighbor")
+            lab.cli(router, "show ip route 10.100.10.0/24")
+            lab.cli(router, f"ping 10.100.10.10 source {lan} repeat 2")
+
+        print("3/3  THE SAME CHECK IN CODE: the real routers, then your simulator\\n")
+        render.lab(net)
+        render.lab(Network.simulated(), brief=True)
+        """)
+    b.md("## Slide 4 (two_logs) -- the loudest log on BRANCH-7. Scroll it; do not point at the OSPF lines.")
     b.code("""
         logs = net.logs("BRANCH-7")
         print(f"show logging on BRANCH-7 -- {len(logs)} lines")
         for l in logs[-25:]:
             print("  ", l.ts.time(), l.text)
         """)
-    b.md("## Slide 14 (itch) -- what the on-call engineer types: ping, route, neighbors. Do NOT show the areas yet.")
+    b.md("## Slide 16 (itch) -- what the on-call engineer types: ping, route, neighbors. Do NOT show the areas yet.")
     b.code("""
         print("ping 10.100.10.10 source 10.20.20.1 :", net.ping("BRANCH-7", "10.100.10.10", "10.20.20.1"))
         print("route 10.100.10.0/24               :", net.route("BRANCH-7", "10.100.10.0/24"))
         print("OSPF neighbors on BRANCH-7         :", net.ospf_neighbors("BRANCH-7"))
         """)
-    b.md("## Lab 2 reveal (slide 26) -- one digit")
+    b.md("## Lab 2 reveal (slide 28) -- one digit")
     b.code("""
-        for d in ("BRANCH-7", "HUB-1"):
-            print(f"{d:9} show ip ospf interface Ethernet1 -> area {net.ospf_interface(d, 'Ethernet1').area}")
+        render.lab(net, show_area=True)      # the same view, now with the area column: 0.0.0.1 vs 0.0.0.0
         """)
     b.md("## Optional -- Lab 1's single agent on real gear (it changes the router: re-arm with reset.sh + break.sh after)")
     b.code("""
+        from netops.orchestrator import new_incident, run_lab1
         lab1 = run_lab1(new_incident(llm=llm, network=Network.ceos(HOSTS)))
         print("the agent says:", lab1["agent_says"])
         print("reachability() =", lab1["reachability"], "| ungated writes:", lab1["writes"])
         """)
-    b.md("## Lab 4 live (slides 41-44) -- the team stops at the gate; the volunteer is the on-call engineer")
+    b.md("## Lab 4 live (slides 43-46) -- the team stops at the gate; the volunteer is the on-call engineer")
     b.code("""
+        from netops.orchestrator import ALERT, ONCALL_REJECT, contrast, new_incident, team
         inc = new_incident(llm=llm, network=Network.ceos(HOSTS))
         gate = team(inc, "on-call").run_to_gate(ALERT)
         render.gate(gate)                     # v1: six PASS, blast_radius_evidenced FAIL, ready for approval: False
@@ -70,8 +88,9 @@ def book() -> LabBook:
         print("\\nreachability() =", result["reachability"])
         render.audit(inc.network)
         render.dashboard(result["reachability"])
+        render.lab(net, show_area=True)      # the lab after the one approved write: FULL, route, PASS on both branches
         """)
-    b.md("## The contrast (slide 44) -- needs the optional Lab 1 cell above; otherwise read the students' table")
+    b.md("## The contrast (slide 46) -- needs the optional Lab 1 cell above; otherwise read the students' table")
     b.code("""
         if "lab1" in globals():
             print(contrast(lab1, result))

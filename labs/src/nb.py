@@ -9,7 +9,7 @@ import nbformat
 from nbformat.v4 import new_code_cell, new_markdown_cell, new_notebook
 
 REPO = "eduardd76/multiagent-netops-kit"
-REF = "v0.1.7"
+REF = "v0.1.8"
 PKG = Path(__file__).resolve().parents[2] / "netops"
 
 

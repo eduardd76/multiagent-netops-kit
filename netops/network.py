@@ -5,6 +5,7 @@ ToolBox), get typed models back, and every result becomes citable evidence.
 """
 from __future__ import annotations
 
+import re
 import time
 from datetime import datetime
 
@@ -20,6 +21,7 @@ from netops.readers import get_reader
 class Network:
     def __init__(self, devices: dict[str, DeviceDriver], spec: dict, fabric: Fabric | None = None, inventory=None):
         self.devices, self.spec, self.fabric = devices, spec, fabric
+        self._audit: list[dict] = []                 # real devices: the changes made through this Network
         self.inventory = inventory or YamlInventory(spec)
         self.year = datetime.fromisoformat(spec["start_time"]).year
         self.affected: str = spec.get("affected") or next(iter(spec["devices"]))
@@ -117,7 +119,15 @@ class Network:
 
     # ---------------------------------------------------------------- WRITE (never given to team agents)
     def configure(self, device: str, cmds: list[str], *, by: str) -> ConfigResult:
-        return self._dev(device).configure(cmds, by=by)
+        result = self._dev(device).configure(cmds, by=by)
+        if self.fabric is None:                      # simulated devices audit themselves (fabric.audit)
+            self._audit += audit_rows(device, cmds, by)
+        return result
+
+    @property
+    def audit(self) -> list[dict]:
+        """Every change made: the simulator's device audit, or on real devices the changes made through here."""
+        return self.fabric.audit if self.fabric is not None else self._audit
 
     def clear_counters(self, device: str, interface: str | None = None, *, by: str = "operator") -> None:
         if self.fabric is not None:                  # simulated: record who did it in the device audit
@@ -125,6 +135,34 @@ class Network:
             self.fabric.clear_counters(device, name, by=by)
             return
         self.reader(device).clear_counters(self._dev(device), interface)
+        self._audit.append({"ts": _now(), "device": device, "interface": interface, "set": "clear_counters", "to": 0,
+                            "by": by})
+
+
+def _now() -> str:
+    return datetime.now().isoformat(timespec="seconds")
+
+
+def audit_rows(device: str, cmds: list[str], by: str) -> list[dict]:
+    """Audit rows for a change pushed to a real device, in the simulator's format (one row per setting)."""
+    rows, interface = [], None
+    for raw in cmds:
+        line = " ".join(raw.split())
+        if m := re.fullmatch(r"interface (\S+)", line):
+            interface = m.group(1)
+            continue
+        if m := re.fullmatch(r"ip ospf area (\S+)", line):
+            setting, value = "area", m.group(1)
+        elif line in ("shutdown", "no shutdown"):
+            setting, value = "admin", "up" if line == "no shutdown" else "down"
+        elif m := re.fullmatch(r"mtu (\d+)", line):
+            setting, value = "mtu", int(m.group(1))
+        elif line:
+            setting, value = line, ""
+        else:
+            continue
+        rows.append({"ts": _now(), "device": device, "interface": interface, "set": setting, "to": value, "by": by})
+    return rows
 
 
 class ReadOnlyNetwork:
