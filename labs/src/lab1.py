@@ -37,7 +37,11 @@ def book() -> LabBook:
         1. **The route is back** - like `show ip route 10.100.10.0/24` on BRANCH-7
         2. **Users can reach the service** - like `ping 10.100.10.10 source 10.20.20.1` (from the branch LAN)
 
-        Replace the `raise NotImplementedError(...)` line below with 3-5 lines. Then run the cell, and run Step 4.
+        **How to edit the cell below:** keep the first line (`def did_it_work(net) -> bool:`) and the description
+        under it. Delete **only the last line**, `raise NotImplementedError(...)`, and type your 3 lines **in its
+        place**, indented like the line you deleted. Do **not** write a second `def` line.
+        Then run the cell, and run Step 4.
+
         Until you do, Step 4 stops with `NotImplementedError` - that is not a crash, it's your turn.
         """)
     b.todo("lab1_did_it_work",
@@ -60,8 +64,9 @@ def book() -> LabBook:
     b.md("""
         <details><summary><b>Stuck for 3 minutes? Open the answer - with each line explained</b></summary>
 
+        **Delete the `raise NotImplementedError(...)` line and put these 3 lines in its place** (same indent, 4 spaces):
+
         ```python
-        def did_it_work(net) -> bool:
             route_back = net.route("BRANCH-7", "10.100.10.0/24").present          # 1. is the route back in the table?
             users_ok = net.ping("BRANCH-7", "10.100.10.10", "10.20.20.1").success  # 2. can the branch LAN reach the service?
             return route_back and users_ok                                          # fixed = BOTH are true
@@ -70,10 +75,20 @@ def book() -> LabBook:
         - **Line 1** is `show ip route 10.100.10.0/24` on BRANCH-7. `.present` is True if the route is there.
         - **Line 2** is `ping 10.100.10.10 source 10.20.20.1` - from the users' LAN, not from the router itself.
           `.success` is True if the ping works.
-        - **Line 3**: the incident is fixed only if **both** are true. A route with no ping, or a ping with no route,
-          is not "fixed".
+        - **Line 3** gives the answer back: fixed only if **both** are true. Without a `return` line the function
+          answers `None`.
 
-        Copy it into the cell above (replace the whole cell), run it, then run Step 4.
+        The finished cell has **one** `def` line and ends with `return`:
+
+        ```python
+        def did_it_work(net) -> bool:
+            # ...the description (between the triple quotes) stays here...
+            route_back = net.route("BRANCH-7", "10.100.10.0/24").present
+            users_ok = net.ping("BRANCH-7", "10.100.10.10", "10.20.20.1").success
+            return route_back and users_ok
+        ```
+
+        Run the cell, then run Step 4.
         </details>
         """)
     b.md("""
@@ -90,9 +105,11 @@ def book() -> LabBook:
         """)
     b.code("""
         print("the agent says :", (run.final_text or "").strip().split("\\n")[0])   # first line is enough
-        print("did_it_work:", did_it_work(net))
+        answer = did_it_work(net)
+        assert answer is not None, "did_it_work returned None - keep ONE def line, and make the last line a return"
+        print("did_it_work:", answer)
         print("reachability() =", net.reachability())
-        assert did_it_work(net) == (net.reachability() == "PASS"), "your definition disagrees with the network"
+        assert answer == (net.reachability() == "PASS"), "your definition disagrees with the network"
         render.audit(net)
         """)
     return b
