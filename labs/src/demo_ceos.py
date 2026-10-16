@@ -50,13 +50,13 @@ def book() -> LabBook:
         print("\\nreachability() =", inc.network.reachability())        # the users' check, after it says 'resolved'
         render.audit(inc.network)                                       # what it changed on the router, and who approved
         """)
-    b.md("## Slide 16 (itch) -- what the on-call engineer types: ping, route, neighbors. Do NOT show the areas yet.")
+    b.md("## Slide 20 (itch) -- what the on-call engineer types: ping, route, neighbors. Do NOT show the areas yet.")
     b.code("""
         print("ping 10.100.10.10 source 10.20.20.1 :", net.ping("BRANCH-7", "10.100.10.10", "10.20.20.1"))
         print("route 10.100.10.0/24               :", net.route("BRANCH-7", "10.100.10.0/24"))
         print("OSPF neighbors on BRANCH-7         :", net.ospf_neighbors("BRANCH-7"))
         """)
-    b.md("## Lab 2 reveal (slide 28) -- one digit")
+    b.md("## Lab 2 reveal (slide 33) -- one digit")
     b.code("""
         render.lab(net, show_area=True)      # the same view, now with the area column: 0.0.0.1 vs 0.0.0.0
         """)
@@ -67,7 +67,7 @@ def book() -> LabBook:
         print("the agent says:", lab1["agent_says"])
         print("reachability() =", lab1["reachability"], "| ungated writes:", lab1["writes"])
         """)
-    b.md("## Lab 4 live (slides 43-46) -- the team stops at the gate; the volunteer is the on-call engineer")
+    b.md("## Lab 4 live (slides 51-54) -- the team stops at the gate; the volunteer is the on-call engineer")
     b.code("""
         from netops.orchestrator import ALERT, ONCALL_REJECT, contrast, new_incident, team
         inc = new_incident(llm=llm, network=Network.ceos(HOSTS))
@@ -99,7 +99,7 @@ def book() -> LabBook:
         render.dashboard(result["reachability"])
         render.lab(net, show_area=True)      # the lab after the one approved write: FULL, route, PASS on both branches
         """)
-    b.md("## The contrast (slide 47) -- needs the optional Lab 1 cell above; otherwise read the students' table")
+    b.md("## The contrast (slide 55) -- needs the optional Lab 1 cell above; otherwise read the students' table")
     b.code("""
         if "lab1" in globals():
             print(contrast(lab1, result))

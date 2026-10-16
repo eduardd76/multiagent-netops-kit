@@ -25,15 +25,29 @@ def book() -> LabBook:
         run = SingleAgent(llm, net, inc.evidence).run(ALERT, trace=inc.trace)   # one agent works the whole incident
         """)
     b.md("""
-        ## Step 3 -- Your turn
-        `NotImplementedError` is not a crash -- it's your turn. Write `did_it_work(net)`: 3-5 lines, read tools only.
+        ## Step 3 -- Your turn: how do YOU know it's really fixed?
+        The agent just said something - "resolved" or "not resolved". That is its **opinion**. Nobody checked it.
+
+        After any change on a real network, you don't trust the person who made the change. Before you close the
+        ticket, you **check the network yourself**. Here you write that check, in code.
+
+        **Think like the users at BRANCH-7.** They don't care about the logs or the interface light. They care about
+        one thing: *can we reach the core service 10.100.10.10?* So "fixed" means two things, both true:
+
+        1. **The route is back** - like `show ip route 10.100.10.0/24` on BRANCH-7
+        2. **Users can reach the service** - like `ping 10.100.10.10 source 10.20.20.1` (from the branch LAN)
+
+        Replace the `raise NotImplementedError(...)` line below with 3-5 lines. Then run the cell, and run Step 4.
+        Until you do, Step 4 stops with `NotImplementedError` - that is not a crash, it's your turn.
         """)
     b.todo("lab1_did_it_work",
            student='''
             def did_it_work(net) -> bool:
                 """True only if the incident is really fixed. Read tools you can use:
-                net.ping(device, destination, source), net.route(device, prefix), net.ospf_neighbors(device),
-                net.interface(device, interface).   3-5 lines."""
+                net.route(device, prefix).present        -> True if the route is in the table
+                net.ping(device, destination, source).success  -> True if the ping works
+                net.ospf_neighbors(device), net.interface(device, interface)   (also available)
+                3-5 lines."""
                 raise NotImplementedError("TODO(lab1_did_it_work): define success")
             ''',
            solution='''
@@ -44,8 +58,35 @@ def book() -> LabBook:
                 return route_back and users_ok
             ''')
     b.md("""
+        <details><summary><b>Stuck for 3 minutes? Open the answer - with each line explained</b></summary>
+
+        ```python
+        def did_it_work(net) -> bool:
+            route_back = net.route("BRANCH-7", "10.100.10.0/24").present          # 1. is the route back in the table?
+            users_ok = net.ping("BRANCH-7", "10.100.10.10", "10.20.20.1").success  # 2. can the branch LAN reach the service?
+            return route_back and users_ok                                          # fixed = BOTH are true
+        ```
+
+        - **Line 1** is `show ip route 10.100.10.0/24` on BRANCH-7. `.present` is True if the route is there.
+        - **Line 2** is `ping 10.100.10.10 source 10.20.20.1` - from the users' LAN, not from the router itself.
+          `.success` is True if the ping works.
+        - **Line 3**: the incident is fixed only if **both** are true. A route with no ping, or a ping with no route,
+          is not "fixed".
+
+        Copy it into the cell above (replace the whole cell), run it, then run Step 4.
+        </details>
+        """)
+    b.md("""
         ## Step 4 -- Check it
-        Compare what the agent says with what the network says, then see what it changed on the router.
+        This cell compares three things: what the **agent** said, what **your check** says, and what the
+        **network** says (`reachability()` - the kit's own users' ping).
+
+        Right now the network is still broken, so `reachability()` is **FAIL**, and a good check says **False**.
+        They must agree. If you get *"your definition disagrees with the network"*, your check is too loose - most
+        often "the interface is up". **Up isn't routed:** check the route and the ping.
+
+        Then look at the device audit: what the agent changed on the router, and that nobody approved it.
+        This check is the idea the team's **validator** runs automatically in Labs 3 and 4.
         """)
     b.code("""
         print("the agent says :", (run.final_text or "").strip().split("\\n")[0])   # first line is enough
