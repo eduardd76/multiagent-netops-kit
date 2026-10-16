@@ -1,20 +1,31 @@
-from labs.src.nb import LabBook
+from labs.src.nb import TEAM_MD, LabBook
 
 
 def book() -> LabBook:
     b = LabBook("lab4_full_team", "Lab 4 -- The Team Resolves It. A Human Holds the Gate.",
                 expect=["needs_human", "Approved v2", "RESOLVED.", "reachability() = PASS", "Lab 4 (team)", "ON-CALL CHECKLIST", "THREE ARTIFACTS", "TRAJECTORY", "llm turns"])
     b.md("""
-        Everything together: coordinator -> troubleshooting -> config -> validation -> **human** -> executor ->
-        validation. Nothing is applied until a person approves the exact commands. The approval is a single-use token
-        bound to that exact proposal; the executor (not an AI) applies it and backs out automatically if OSPF doesn't
-        come up.
+        **Lab 4 in one line** - the whole team, with you in the middle:
 
-        **This cell** builds a fresh broken network and runs the team all the way to the **human gate**: diagnose,
-        decide, propose, validate. Put your name in `APPROVER` - you are the on-call engineer.
+        `coordinator -> troubleshooting -> config -> validation -> YOU (the CAB) -> executor -> validation`
 
-        You should see the gate: the proposed commands and the pre-checks, with one **FAIL**
-        (the blast radius isn't backed by evidence from both ends of the link - Lab 3's ending). Nothing is applied yet.
+        - Nothing touches the router until **you** approve the exact commands.
+        - Your approval becomes an **approval token**: usable once, and only for that exact change.
+        - The **executor** applies it. It is plain code, not AI, and it backs out by itself if OSPF doesn't come up.
+        """)
+    b.md(TEAM_MD)
+    b.md("""
+        **What this does:** builds a fresh broken network and runs the team up to the **gate** (the CAB step):
+        diagnose, propose, pre-check. Nothing applied.
+
+        - `APPROVER` = your name. You are the on-call engineer.
+        - `gate` = the change request now waiting for you.
+        - `render.gate(gate)` = prints it like a change ticket.
+
+        **Your job:** replace `"your-name"` with your name, then run.
+
+        **What you'll see** at the bottom: `FAIL  blast_radius_evidenced` and `ready for approval: False`.
+        Nobody read the neighbor tables on both ends.
         """)
     b.code("""
         from netops.orchestrator import new_incident, ALERT, ONCALL_REJECT, team, run_lab1, contrast
@@ -25,21 +36,30 @@ def book() -> LabBook:
         """)
     b.md("""
         ## 1 -- Your approval policy (it belongs to the human, not to the author)
-        You are the **CAB** for this change. The team designed it; you decide. Your rule is the on-call rule:
-        **never approve while any pre-check fails.** A failing pre-check is like a change ticket with a missing
-        rollback plan - you send it back with the reason, you don't sign it "just this once".
+        You are the **CAB**: the team designed the change, you approve or reject it.
+        The on-call rule: **never approve while any pre-check fails.** A failing pre-check is like a change ticket
+        with no rollback plan - you send it back with the reason.
+        """)
+    b.md("""
+        **The rule in code.** `gate.pre_checks` is a list, one item per check: `{"check": ..., "ok": True/False, "detail": ...}`
 
-        `gate.pre_checks` is a list. Each pre-check looks like `{"check": ..., "ok": True/False, "detail": ...}`.
+        `review(gate)` must return a **pair** `(decision, reasons)`:
 
-        - If **any** pre-check has `ok` False: answer `("reject", ONCALL_REJECT)` - `ONCALL_REJECT` is the
-          on-call engineer's written reason, ready in the kit. The team reads it and must fix it in v2.
-        - If **all** pass: answer `("approve", "")`.
+        | pre-checks | return |
+        |---|---|
+        | any `ok` is False | `("reject", ONCALL_REJECT)` |
+        | all pass | `("approve", "")` |
 
-        **How to edit the cell below:** keep the `def review(gate) -> tuple[str, str]:` line and the description.
-        Delete **only the last line**, `raise NotImplementedError(...)`, and put your lines in its place,
-        indented like the line you deleted. Do **not** write a second `def` line. Then run the cell.
+        `ONCALL_REJECT` = the on-call engineer's written reason, ready in the kit. The team must fix it in v2.
+        """)
+    b.md("""
+        **What this does:** defines your policy, `review`. The next cell uses it.
 
-        Running this cell prints nothing - it only defines your policy.
+        **Your job:** keep the `def review(gate) -> tuple[str, str]:` line and the description. Replace **only**
+        the last line, `raise NotImplementedError(...)`, with your lines, same indent. Do **not** write a second
+        `def` line.
+
+        **What you'll see:** nothing. This cell only defines the function.
         """)
     b.todo("lab4_review",
            student='''
@@ -67,21 +87,30 @@ def book() -> LabBook:
             return "approve", ""                                     # 4. all green - approve
         ```
 
-        - **Line 1** walks the pre-checks and keeps only the failed ones (`ok` is False).
+        - **Line 1** keeps only the failed pre-checks (`ok` is False).
         - **Line 2** asks: is that list empty or not?
-        - **Line 3** rejects, and gives the team the on-call engineer's reason, so v2 must fix it.
+        - **Line 3** rejects, with the on-call reason, so v2 must fix it.
         - **Line 4** approves only when nothing failed. Without a `return` line the function answers `None`.
 
         The finished cell has **one** `def` line and ends with `return`. Run it, then run the next cell.
         </details>
         """)
     b.md("""
-        **This cell runs your policy on the gate.** You should see **REJECT** for v1 with the reason, then the team
-        revises, a new gate (v2) with all pre-checks passing, and **APPROVE**. Your answer sets `decision`; the
-        actual approval happens in the next cell.
+        **What this does:** the CAB meeting. Your `review` judges the gate. On reject, the team reads the neighbor
+        tables on both ends and comes back with **v2**. Nothing is applied yet: you only set `decision` here.
 
-        - `NotImplementedError` here means you haven't written your policy yet - it's your turn, go up one cell.
-        - *"Your policy never approves"* means `review()` rejects even when every pre-check passes - check line 4.
+        **What you'll see** (with your name):
+        - `your-name: REJECT No. You're telling me what to type. ...`
+        - `CHANGE REQUEST v2` with `PASS  blast_radius_evidenced: neighbor tables on both ends cited`
+          and `ready for approval: True`
+        - `your-name: APPROVE`
+        """)
+    b.md("""
+        **If it stops:**
+        - `NotImplementedError` - you haven't written `review` yet. Your turn: go up one cell.
+        - `review returned None` - keep ONE `def` line, and make the last line a `return`.
+        - `Your policy never approves` - the kit caps rejections at **3**, then the team stops and **ESCALATES**
+          to a person (nothing applied). Your `review` rejects even when every pre-check passes: check line 4.
         """)
     b.code("""
         from netops.agents.coordinator import Escalation
@@ -101,14 +130,22 @@ def book() -> LabBook:
             print(f"{APPROVER}: {decision.upper()}", reasons)
         """)
     b.md("""
-        **This cell approves - and only now does anything touch the router.** Your approval mints a single-use
-        token bound to v2; the executor (plain code, not an AI) applies the exact commands, and validation
-        re-checks the network. You should see **Approved v2** in the transcript, **RESOLVED.**,
-        `reachability() = PASS`, the device audit, and a green dashboard.
+        **What this does:** you sign v2. **Only now does anything touch the router.**
 
-        - *GateError* means you ran this cell twice: one approval = one write, the gate refuses a second.
-          That's the design, not a bug.
-        - `NameError: result` after a GateError: re-run from the first cell of this lab for a fresh incident.
+        - `gate.approve(APPROVER)` creates the **approval token** (single-use, valid only for v2) and hands it
+          only to the executor.
+        - The executor (plain code, not AI) applies the 2 commands once. Validation then re-checks until OSPF is
+          FULL, the route is back and the ping works.
+
+        **What you'll see:** `Approved v2.`, then `RESOLVED. reachability() = PASS`, the `DEVICE CHANGE AUDIT`
+        (one change, by `executor:` + your name) and `>>> RESOLVED. <<<`.
+        """)
+    b.md("""
+        **If it stops:**
+        - `GateError: v2 was already approved and applied ...` - you ran this cell twice. One approval = one
+          write; the gate refuses a second. That's the design, not a bug.
+        - `GateError: pre-checks are failing ...` - your `review` approved v1 with a FAIL. Fix `review`.
+        - `NameError: result` after a GateError - re-run from the first cell of this lab for a fresh incident.
         """)
     b.code("""
         from netops.approval import GateError
@@ -124,9 +161,12 @@ def book() -> LabBook:
         """)
     b.md("""
         ## 2 -- Lab 1 vs Lab 4
-        **This cell** re-runs Lab 1's single agent on a fresh incident and puts it next to your team's run.
-        You should see a side-by-side table (**Lab 4 (team)** column): who changed what, who approved it, and
-        whether the network is really fixed. Read the approval row first.
+        **What this does:** re-runs Lab 1's single agent on a fresh incident and puts it next to your team's run.
+
+        **What you'll see:** a table with columns `Lab 1 (one agent)` and `Lab 4 (team)`. How to read it:
+        - `Says 'resolved'`: True for **both** - an agent's "resolved" proves nothing.
+        - `reachability()`: `FAIL` vs `PASS` - only the team really fixed it.
+        - Last three rows (playbook, human approval, validation): the difference. Read `A human approved the change` first.
         """)
     b.code("""
         lab1 = run_lab1(new_incident(llm=llm, verbose=False))
@@ -134,13 +174,24 @@ def book() -> LabBook:
         """)
     b.md("""
         ## 3 -- Debrief: what this change leaves behind
-        Three artifacts per action: the **proposal**, the **validation report**, the **approval record**. In a
-        regulated network the audit trail is the product. Then the scorecard and the bill for both approaches --
-        report the numbers, don't justify the pattern.
+        In a regulated network the audit trail is the product. Every action leaves **three artifacts**:
 
-        **This cell** prints the three artifacts, then the **TRAJECTORY** scorecard and the bill (`llm turns`,
-        tokens) for the single agent vs the full team. It runs two fresh incidents, so it takes a few seconds.
-        If the team costs more, say so - that's the honest number.
+        1. **Proposal** - the commands, the rollback, the evidence.
+        2. **Validation report** - every pre-check and post-check.
+        3. **Approval record** - who approved, and proof the approval token was used once
+           (`event=consumed`). `digest=` is a fingerprint of the exact change that was approved.
+        """)
+    b.md("""
+        **What this does:** prints the three artifacts, then runs two fresh incidents (single agent vs team, same
+        alert) and scores both. Takes a few seconds.
+
+        **What you'll see:**
+        - `THREE ARTIFACTS PER ACTION`
+        - `TRAJECTORY` - who found the real cause, who chased the flap (`acted on the red herring (flap)`),
+          who changed devices outside a gate.
+        - `COST` - `llm turns` and model tokens (`~input tokens`).
+
+        Report the numbers, don't justify the pattern. If the team costs more, say so.
         """)
     b.code("""
         render.artifacts(gate, inc.approvals)
@@ -153,8 +204,8 @@ def book() -> LabBook:
     b.knowledge_check([
         ("""The config specialist designed the change. Why can't it (or the coordinator) approve it?""",
          """Separation of duties: whoever designs a change does not approve it (four-eyes). The model
-         *proposes*; evidence grounds it; validation checks it; a human *disposes*. The token is minted only on
-         the human's action and is bound to the exact proposal."""),
+         *proposes*; evidence grounds it; validation checks it; a human *disposes*. The approval token is minted
+         only on the human's action and is bound to the exact proposal."""),
         ("""After a month the approver clicks "approve" on everything in 10 seconds. What do you change?""",
          """That is automation bias (rubber-stamping). Show the measured before/after evidence delta, not a
          confidence score; make the human-owned checklist rows explicit; track how often approved changes are

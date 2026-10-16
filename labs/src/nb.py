@@ -9,7 +9,7 @@ import nbformat
 from nbformat.v4 import new_code_cell, new_markdown_cell, new_notebook
 
 REPO = "eduardd76/multiagent-netops-kit"
-REF = "v0.1.13"
+REF = "v0.1.14"
 PKG = Path(__file__).resolve().parents[2] / "netops"
 
 
@@ -113,3 +113,17 @@ class LabBook:
             nbformat.write(self.build(variant), p)
             out.append(p)
         return out
+
+TEAM_MD = """
+    ### Meet the team - one NOC shift, in code
+    | # | Card | NOC job | Asks the model? | May touch | Lives in |
+    |---|---|---|---|---|---|
+    | 1 | Coordinator | shift lead | no - plain code | sends the tickets, never writes | `netops/agents/coordinator.py` |
+    | 2 | Troubleshooting | tier-2 | only to rank + explain | 6 read checks, run by code | `netops/agents/troubleshooting.py` |
+    | 3 | Config | change author | only to pick the playbook entry | nothing - code fills in the commands | `netops/agents/config.py` |
+    | 4 | Validation | QA | no - plain code | its own read checks, before + after | `netops/agents/validation.py` |
+    | 5 | **You** | **the CAB** | - | approve or reject | this notebook |
+    | 6 | Executor | the hands | no - plain code | **the only writer**, once, with your approval token | `netops/executor.py` |
+
+    **The ones who think don't touch. The one who touches doesn't think.** One line builds them all: `team(inc)`.
+    The real code of each card, and a diagram of how they talk: """ + f"[docs/TEAM.md](https://github.com/{REPO}/blob/{REF}/docs/TEAM.md)."

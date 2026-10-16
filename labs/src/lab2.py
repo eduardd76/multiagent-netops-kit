@@ -1,4 +1,4 @@
-from labs.src.nb import LabBook
+from labs.src.nb import TEAM_MD, LabBook
 
 
 def book() -> LabBook:
@@ -16,6 +16,7 @@ def book() -> LabBook:
 
         **This cell** loads the kit and builds a fresh broken network plus the team. It prints nothing - that's normal.
         """)
+    b.md(TEAM_MD)
     b.code("""
         from netops.orchestrator import new_incident, ALERT, team
         from netops.protocol import Message
