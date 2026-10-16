@@ -126,6 +126,13 @@ class GateRequest:
     proposal: dict
     pre_checks: list[dict]
     result: dict = field(default_factory=dict)
+    approved_by: str = ""                  # set on the first approval: one approval, one write
+
+    def _refuse_if_spent(self) -> None:
+        """An approved gate is spent (applied, or in flight): a second approve() or a reject() is refused."""
+        if self.approved_by:
+            raise GateError(f"v{self.proposal['version']} was already approved and applied by executor:{self.approved_by} "
+                            f"-- one write per approval; nothing was applied")
 
     @property
     def ready(self) -> bool:
@@ -138,6 +145,7 @@ class GateRequest:
                            payload=decision, status="done"))
 
     def reject(self, reasons: str) -> "GateRequest":
+        self._refuse_if_spent()
         c = self.coordinator
         self._human(reasons, {"decision": "reject", "version": self.proposal["version"]})
         if self.proposal["version"] >= c.max_rejections:
@@ -190,6 +198,7 @@ class GateRequest:
         return self._approve(approver, change_id=change_id)
 
     def _approve(self, approver: str | None, *, change_id: str) -> dict:
+        self._refuse_if_spent()
         c = self.coordinator
         who = approver or c.approver
         if c.requester and who.strip().casefold() == c.requester.strip().casefold():
@@ -197,6 +206,7 @@ class GateRequest:
         if not self.ready:
             failing = "; ".join(x["detail"] for x in self.pre_checks if not x["ok"])
             raise GateError(f"pre-checks are failing ({failing}) -- reject with your reasons instead")
+        self.approved_by = who                                                     # spent from here on, even if apply raises
         self._human(f"Approved v{self.proposal['version']}.", {"decision": "approve"})
         token = c.approvals.approve(self.proposal, who, change_id=change_id)      # minted on the human's action, handed to the Executor
         execution = c.executor.apply(self.proposal, token)

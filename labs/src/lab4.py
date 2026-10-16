@@ -46,7 +46,11 @@ def book() -> LabBook:
             print(f"{APPROVER}: {decision.upper()}", reasons)
         """)
     b.code("""
-        result = gate.approve(APPROVER)      # token minted here, handed only to the executor
+        from netops.approval import GateError
+        try:
+            result = gate.approve(APPROVER)  # token minted here, handed only to the executor
+        except GateError as e:               # re-ran this cell? one approval = one write: the gate refuses a second
+            print("GateError:", e)
         render.transcript(inc.bus)
         print("\\nreachability() =", result["reachability"])
         render.audit(inc.network)

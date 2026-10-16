@@ -88,7 +88,11 @@ def book() -> LabBook:
         """)
     b.md("The volunteer says yes. Approve -- the executor (code) applies, then the validator polls the real network.")
     b.code("""
-        result = gate.approve("on-call")
+        from netops.approval import GateError
+        try:
+            result = gate.approve("on-call")
+        except GateError as e:               # re-ran this cell? one approval = one write: the gate refuses a second
+            print("GateError:", e)
         render.transcript(inc.bus)
         print("\\nreachability() =", result["reachability"])
         render.audit(inc.network)

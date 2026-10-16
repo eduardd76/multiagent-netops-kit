@@ -58,7 +58,7 @@ The same seven read tools, served over MCP to any client (Claude Code, Claude De
 No write tool exists in it, the network behind it is a read-only view, and device output is wrapped as untrusted data.
 
 ```bash
-pip install "netops[mcp] @ git+https://github.com/eduardd76/multiagent-netops-kit@v0.1.9"
+pip install "netops[mcp] @ git+https://github.com/eduardd76/multiagent-netops-kit@v0.1.10"
 claude mcp add netops -- python -m netops.mcp_server          # the simulated incident: BRANCH-7 is down
 # real cEOS: set NETOPS_CEOS_HOSTS="BRANCH-7=clab.orb.local:8011,HUB-1=clab.orb.local:8021,..." for the server
 ```
