@@ -9,14 +9,14 @@ import nbformat
 from nbformat.v4 import new_code_cell, new_markdown_cell, new_notebook
 
 REPO = "eduardd76/multiagent-netops-kit"
-REF = "v0.1.8"
+REF = "v0.1.9"
 PKG = Path(__file__).resolve().parents[2] / "netops"
 
 
 def setup_cell() -> str:
     return dedent(f'''\
         # SETUP -- run once. Installs the lab package from GitHub (about 15 s).
-        # No GitHub access? Run the cells in the APPENDIX at the bottom, then come back and run this cell again.
+        # Install failed (no GitHub access)? Open the collapsed Appendix at the bottom, run its cells, then run this cell again.
         import os, importlib.util
         if not os.environ.get("NETOPS_LOCAL") and importlib.util.find_spec("netops") is None:
             get_ipython().run_line_magic("pip", "install -q git+https://github.com/{REPO}@{REF}")
@@ -26,15 +26,28 @@ def setup_cell() -> str:
         print("LLM:", render.llm_status(llm))   # tests the endpoint once''')
 
 
+APPENDIX_TITLE = "Appendix - only if the setup cell failed to install (click to open)"
+APPENDIX_ID = "appendix"        # fixed cell id, so Colab's collapsed_sections can name it
+
+
 def writefile_cells() -> list:
-    """The %%writefile fallback: the whole package, one file per cell."""
-    cells = [new_markdown_cell("## APPENDIX -- offline fallback\nOnly if `pip install` failed: run every cell below "
-                               "(top to bottom), then re-run the SETUP cell.")]
+    """The %%writefile fallback: the whole package, one file per cell. Collapsed by default
+    (Colab: collapsed section + form view; JupyterLab: collapsed heading + hidden source/outputs).
+    `%%writefile` must stay the first line of its cell, so those cells carry no #@title."""
+    head = new_markdown_cell(f"## {APPENDIX_TITLE}\n"
+                             "Only if `pip install` in the SETUP cell failed: run every cell below "
+                             "(top to bottom), then re-run the SETUP cell.")
+    head.id = APPENDIX_ID
+    head.metadata.update({"collapsed": True, "heading_collapsed": True, "jupyter": {"heading_collapsed": True}})
+    cells = [head]
     files = sorted(p for p in PKG.rglob("*") if p.suffix in (".py", ".yaml") and "__pycache__" not in p.parts)
     dirs = sorted({str(p.parent.relative_to(PKG.parent)) for p in files})
-    cells.append(new_code_cell("import os\n" + "\n".join(f"os.makedirs({d!r}, exist_ok=True)" for d in dirs)))
+    cells.append(new_code_cell("#@title kit folders\nimport os\n"
+                               + "\n".join(f"os.makedirs({d!r}, exist_ok=True)" for d in dirs)))
     for p in files:
         cells.append(new_code_cell(f"%%writefile {p.relative_to(PKG.parent)}\n{p.read_text()}"))
+    for c in cells[1:]:
+        c.metadata.update({"cellView": "form", "jupyter": {"source_hidden": True, "outputs_hidden": True}})
     return cells
 
 
@@ -87,6 +100,7 @@ class LabBook:
                 nb.cells.append(cell)
         if fallback:
             nb.cells.extend(writefile_cells())
+            nb.metadata["colab"] = {"collapsed_sections": [APPENDIX_ID]}
         nb.metadata["kernelspec"] = {"display_name": "Python 3", "language": "python", "name": "python3"}
         nb.metadata["language_info"] = {"name": "python"}
         return nb

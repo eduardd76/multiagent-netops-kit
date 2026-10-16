@@ -19,7 +19,7 @@ Branch **BRANCH-7** reaches its hub **HUB-1** over `Ethernet1` running OSPF.
 ## Labs (Colab)
 | Notebook | What students do | Acceptance (tested) |
 |---|---|---|
-| `labs/lab1_single_agent.ipynb` | Watch one agent with every tool clear the flap and declare victory; define success. Stretch: patch the prompt, run the `mtu_mismatch` variant | says "resolved" while `reachability()=="FAIL"`; prompt patch does not transfer |
+| `labs/lab1_single_agent.ipynb` | Four steps: the symptom, one agent with every tool, define success (`did_it_work`), check it | says "resolved" while `reachability()=="FAIL"`; the audit shows its ungated changes |
 | `labs/lab2_coordinator_specialist.ipynb` | Write the diagnose message; choose the root cause. Stretch: trajectory scorecard + cost table vs Lab 1 | coordinator sends `diagnose`; troubleshooting returns **both** faults |
 | `labs/lab3_config_validation.ipynb` | Write the command gate and the expected post-state | proposal = playbook commands only, `needs_human`; off-playbook command blocked; nothing applied |
 | `labs/lab4_full_team.ipynb` | Write the approval policy; reject → revise → approve; debrief: three artifacts, scorecard, cost | validation confirms OSPF FULL + reachable; gate shows the 9-question on-call checklist |
@@ -58,7 +58,7 @@ The same seven read tools, served over MCP to any client (Claude Code, Claude De
 No write tool exists in it, the network behind it is a read-only view, and device output is wrapped as untrusted data.
 
 ```bash
-pip install "netops[mcp] @ git+https://github.com/eduardd76/multiagent-netops-kit@v0.1.8"
+pip install "netops[mcp] @ git+https://github.com/eduardd76/multiagent-netops-kit@v0.1.9"
 claude mcp add netops -- python -m netops.mcp_server          # the simulated incident: BRANCH-7 is down
 # real cEOS: set NETOPS_CEOS_HOSTS="BRANCH-7=clab.orb.local:8011,HUB-1=clab.orb.local:8021,..." for the server
 ```

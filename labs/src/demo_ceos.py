@@ -7,7 +7,8 @@ def book() -> LabBook:
     b.md("""
         **Instructor only** (needs Docker + containerlab + a cEOS image; not for Colab). See `ceos/README.md`.
 
-        Before the session: `sudo containerlab deploy -t ceos/topology.clab.yml`, then `ceos/break.sh` (~2.5 min:
+        The lab is deployed once with containerlab (on a Mac it runs inside a Linux VM, e.g. OrbStack: prefix commands
+        with `orb -m <vm>`). Before the session: `ceos/reset.sh` then `ceos/break.sh` (~2.5 min:
         6 flaps that recover, the silent area change, 12 flaps that don't). One cell per beat of the speaker script --
         run each cell when the script says so, not all at once. To re-arm afterwards: `ceos/reset.sh` then `ceos/break.sh`.
         """)
@@ -38,12 +39,16 @@ def book() -> LabBook:
         render.lab(net)
         render.lab(Network.simulated(), brief=True)
         """)
-    b.md("## Slide 4 (two_logs) -- the loudest log on BRANCH-7. Scroll it; do not point at the OSPF lines.")
+    b.md("## Slide 5 -- one agent, every tool. ONE cell: the same line the room runs in Lab 1, on the simulator.")
     b.code("""
-        logs = net.logs("BRANCH-7")
-        print(f"show logging on BRANCH-7 -- {len(logs)} lines")
-        for l in logs[-25:]:
-            print("  ", l.ts.time(), l.text)
+        from netops.agents.single import SingleAgent
+        from netops.orchestrator import ALERT, new_incident
+
+        inc = new_incident(llm=llm)            # a fresh copy of the attendees' network (the simulator), incident state
+        print("model:", render.llm_label(llm), "\\nALERT:", ALERT, "\\n")
+        run = SingleAgent(llm, inc.network, inc.evidence).run(ALERT, trace=inc.trace)   # one agent, every tool
+        print("\\nreachability() =", inc.network.reachability())        # the users' check, after it says 'resolved'
+        render.audit(inc.network)                                       # what it changed on the router, and who approved
         """)
     b.md("## Slide 16 (itch) -- what the on-call engineer types: ping, route, neighbors. Do NOT show the areas yet.")
     b.code("""
@@ -90,7 +95,7 @@ def book() -> LabBook:
         render.dashboard(result["reachability"])
         render.lab(net, show_area=True)      # the lab after the one approved write: FULL, route, PASS on both branches
         """)
-    b.md("## The contrast (slide 46) -- needs the optional Lab 1 cell above; otherwise read the students' table")
+    b.md("## The contrast (slide 47) -- needs the optional Lab 1 cell above; otherwise read the students' table")
     b.code("""
         if "lab1" in globals():
             print(contrast(lab1, result))
