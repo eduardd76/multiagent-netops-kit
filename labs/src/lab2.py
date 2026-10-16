@@ -6,12 +6,15 @@ def book() -> LabBook:
                 expect=["coordinator -> troubleshooting", "OSPF area mismatch", "Uplink interface flapping",
                         "acting on: OSPF area mismatch", "TRAJECTORY", "llm turns"])
     b.md("""
-        Lab 1's agent did the work AND graded it. Split the job.
+        Lab 1's agent did the work AND graded it. Now we **split the job**, like a NOC shift:
 
-        Every agent speaks one message:
-        `{from, to, intent: diagnose|propose|validate, task, payload, status: requested|done|needs_human}`.
-        The **coordinator** routes messages and never touches a device. The **troubleshooting specialist** has
-        read-only tools and runs a runbook (the on-call engineer's ordered checks) before the model reasons.
+        - the **coordinator** (the shift lead) routes the ticket and never touches a router;
+        - the **troubleshooting specialist** (tier-2) can only read, and runs the on-call engineer's checks in order.
+
+        They talk in **one message = a ticket with 6 required fields**: from, to, intent, task, payload, status.
+        You write two small things: the coordinator's first message, and which finding to act on.
+
+        **This cell** loads the kit and builds a fresh broken network plus the team. It prints nothing - that's normal.
         """)
     b.code("""
         from netops.orchestrator import new_incident, ALERT, team
@@ -19,7 +22,17 @@ def book() -> LabBook:
         inc = new_incident(llm=llm)
         coordinator = team(inc)           # registers troubleshooting / config / validation on the message bus
         """)
-    b.md("## 1 -- Write the coordinator's first message")
+    b.md("""
+        ## 1 -- Write the coordinator's first message
+        This is the ticket from the slide: **from** the coordinator, **to** the troubleshooting specialist,
+        **intent** diagnose, **task** the alert (`ALERT`), **status** requested. The payload stays empty - nothing is known yet.
+
+        **How to edit the cell below:** keep the `def diagnose_request() -> Message:` line and the description.
+        Delete **only the last line**, `raise NotImplementedError(...)`, and put **one `return` line** in its place,
+        indented like the line you deleted. Do **not** write a second `def` line. Then run the cell.
+
+        One Python detail: `from` is a Python word, so it goes in as `**{"from": "coordinator"}`.
+        """)
     b.todo("lab2_message",
            student='''
             def diagnose_request() -> Message:
@@ -32,8 +45,38 @@ def book() -> LabBook:
                 return Message(**{"from": "coordinator"}, to="troubleshooting", intent="diagnose", task=ALERT,
                                status="requested")
             ''')
+    b.md("""
+        <details><summary><b>Stuck for 3 minutes? Open the answer - explained</b></summary>
+
+        **Delete the `raise NotImplementedError(...)` line and put this in its place** (same indent, 4 spaces):
+
+        ```python
+            return Message(**{"from": "coordinator"}, to="troubleshooting", intent="diagnose", task=ALERT,
+                           status="requested")
+        ```
+
+        - `**{"from": "coordinator"}` - who sends the ticket (the shift lead).
+        - `to="troubleshooting"` - who gets it (tier-2).
+        - `intent="diagnose"` - the kind of work: find out what's wrong. (The other two are propose and validate.)
+        - `task=ALERT` - the page: users at BRANCH-7 can't reach the core service.
+        - `status="requested"` - the work is asked for, not done yet.
+
+        The finished cell has **one** `def` line and ends with that `return`. Run it, then run the next cell.
+        </details>
+        """)
+    b.md("""
+        **This cell sends your ticket** and shows what comes back:
+
+        - `reply:` - who answered, and its status (it should say *troubleshooting -> coordinator diagnose done*);
+        - the **findings** - the specialist reports **two**: one loud, one silent. Each cites its evidence ids;
+        - the **transcript** - every message so far, in order: the incident timeline.
+
+        `NotImplementedError` here means you haven't written step 1 yet - it's your turn, go up one cell.
+        """)
     b.code("""
-        reply = inc.bus.send(diagnose_request())
+        msg = diagnose_request()
+        assert msg is not None, "diagnose_request returned None - keep ONE def line, and make the last line a return"
+        reply = inc.bus.send(msg)
         print("reply:", reply.from_, "->", reply.to, reply.intent, reply.status)
         from netops.agents.troubleshooting import Finding
         findings = [Finding(**f) for f in reply.payload["findings"]]
@@ -41,7 +84,18 @@ def book() -> LabBook:
         render.transcript(inc.bus)
         assert {f.id for f in findings} == {"interface_flap", "ospf_area_mismatch"}, "both faults must be found"
         """)
-    b.md("## 2 -- Which finding does the coordinator act on?")
+    b.md("""
+        ## 2 -- Which finding does the coordinator act on?
+        You now have **two findings**. One is **loud** (hundreds of log lines). One is **silent** (no log line at all).
+        Each finding has a field **`explains_outage`**: True if it explains why the site is *still* down.
+
+        The shift lead must act on the one that explains the outage - **not the loudest one**, and not just the
+        first one in the list.
+
+        **How to edit the cell below:** keep the `def choose_root_cause(findings):` line and the description.
+        Delete **only the last line**, `raise NotImplementedError(...)`, and put your lines in its place,
+        indented like the line you deleted. Do **not** write a second `def` line. Then run the cell.
+        """)
     b.todo("lab2_choose",
            student='''
             def choose_root_cause(findings):
@@ -57,11 +111,37 @@ def book() -> LabBook:
                         return f
                 return None
             ''')
+    b.md("""
+        <details><summary><b>Stuck for 3 minutes? Open the answer - explained</b></summary>
+
+        **Delete the `raise NotImplementedError(...)` line and put these 4 lines in its place** (same indent):
+
+        ```python
+            for f in findings:            # look at each finding, one by one
+                if f.explains_outage:     # does THIS one explain why the site is still down?
+                    return f              # yes - act on it
+            return None                   # none does - hand it to a human
+        ```
+
+        In NOC words: read every finding, and act on the one that explains the outage - not the one that
+        shouts loudest. If none explains it, escalate to a person.
+
+        Run the cell, then run the next one.
+        </details>
+        """)
+    b.md("""
+        **This cell lets the coordinator decide** with your rule. You should see **acting on: OSPF area mismatch**
+        and `reachability() = FAIL` - nothing has been changed yet, **by design**. Diagnosis isn't a fix; the fix
+        comes in Lab 4, with a human's approval.
+
+        If it says *"you chose Uplink interface flapping"*, your rule picked the loud one - use `explains_outage`.
+        """)
     b.code("""
         coordinator.findings = findings
         coordinator.choose = choose_root_cause
         chosen = coordinator.decide()
-        assert chosen is not None and chosen.id == "ospf_area_mismatch", f"you chose {chosen and chosen.title}"
+        assert chosen is not None, "choose_root_cause returned None - keep ONE def line, and return the finding whose explains_outage is True"
+        assert chosen.id == "ospf_area_mismatch", f"you chose {chosen.title} - use explains_outage, not the loudest"
         print("reachability() =", inc.network.reachability(), "-- nothing has been changed yet, by design")
         """)
     b.md("""
