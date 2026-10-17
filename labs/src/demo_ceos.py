@@ -87,7 +87,7 @@ def book() -> LabBook:
         print("route 10.100.10.0/24               :", net.route("BRANCH-7", "10.100.10.0/24"))
         print("OSPF neighbors on BRANCH-7         :", net.ospf_neighbors("BRANCH-7"))
         """)
-    b.md("## Lab 2 reveal (slide 33) -- one digit")
+    b.md("## Lab 2 reveal (slide 34) -- one digit")
     b.md("""
         - **What this does:** the same lab table as slide 3, plus one column: the OSPF area on each uplink
           (what `show ip ospf interface` tells you).
@@ -103,7 +103,7 @@ def book() -> LabBook:
           nobody's approval. **It changes the router: re-arm afterwards with `facilitator/rearm.sh`.**
         - **What you'll see:** `the agent says:` (its claim), then `reachability() = FAIL | ungated writes:`
           (what it changed, unapproved).
-        - **Why it matters:** this feeds the contrast table at slide 55.
+        - **Why it matters:** this feeds the contrast table at slide 56.
         """)
     b.code("""
         from netops.orchestrator import new_incident, run_lab1
@@ -112,7 +112,7 @@ def book() -> LabBook:
         print("reachability() =", lab1["reachability"], "| ungated writes:", lab1["writes"])
         """)
     b.md("""
-        ## Lab 4 live (slides 51-54) -- the team stops at the gate; Edy is the on-call engineer (two hats)
+        ## Lab 4 live (slides 52-55) -- the team stops at the gate; Edy is the on-call engineer (two hats)
 
         Two hats: Edy presents, and Edy plays the on-call engineer who holds the gate -- the CAB step.
         Say it out loud: in production you never approve your own team's change.
@@ -185,7 +185,7 @@ def book() -> LabBook:
             except GateError as e:               # ran it again? one approval token = one write: the gate refuses
                 print("GateError:", e)
         """)
-    b.md("## The contrast (slide 55) -- needs the optional Lab 1 cell above; otherwise read the students' table")
+    b.md("## The contrast (slide 56) -- needs the optional Lab 1 cell above; otherwise read the students' table")
     b.md("""
         - **What this does:** a side-by-side scorecard: Lab 1's lone agent vs Lab 4's team.
           Prints nothing if the optional Lab 1 cell was skipped -- then read the students' table.
