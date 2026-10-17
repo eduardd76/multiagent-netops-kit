@@ -86,9 +86,123 @@ def book() -> LabBook:
         assert {f.id for f in findings} == {"interface_flap", "ospf_area_mismatch"}, "both faults must be found"
         """)
     b.md("""
+        ## Before you write the rule: where do these two cards come from?
+
+        You just got **two findings**. Think of each one as a **card** on the NOC wall. Before you decide which card
+        the coordinator acts on, see where the cards come from. **Nothing to write here: run the 4 short cells and
+        read.** About 3 minutes.
+
+        **The journey of the data, in 5 steps:**
+
+        | # | Step | Who does it | Where it lives |
+        |---|---|---|---|
+        | 1 | **The network**: 4 routers, 2 links, and tonight's faults | a file (the simulator reads it) | `netops/data/incident.yaml` |
+        | 2 | **The checklist**: the on-call engineer's checks, in order | **code** runs them, read-only | `netops/data/diagnose.yaml` |
+        | 3 | **The detectors**: simple *if* rules over the answers. Each match makes one card | **code** | `detect()` in `netops/agents/troubleshooting.py` |
+        | 4 | **The stamp** on each card: YES or NO, *"does this explain why the site is still down?"* | **engineers wrote it once**, code copies it | `netops/playbook.yaml` (`root_cause`) |
+        | 5 | **The words**: put the cards in order and write one sentence each | **the model** (the only AI step here) | the prompt in `troubleshooting.py` |
+
+        **Where does the data really come from?** In your Colab, the 4 routers are a **simulator**, built from step
+        1's file. The instructor's laptop runs the **same design on real Arista routers**. The tools return the same clean
+        records from both, so the agents can't tell the difference. Only the driver changes, like moving the same
+        config to new hardware.
+
+        **NOC analogy:** the checklist is your runbook, the detectors are your alarm rules, the stamp is the
+        *severity* your senior engineer gave each alarm years ago, and the model is the colleague who writes the
+        ticket summary.
+        """)
+    b.code("""
+        # 1/4  THE NETWORK - where the data comes from. Nothing to write: run and read.
+        # In Colab the 4 routers are a simulator built from ONE file. The instructor's real Arista lab runs the same design.
+        import yaml
+        from importlib import resources
+        spec = yaml.safe_load(resources.files("netops").joinpath("data", "incident.yaml").read_text())
+        print("routers:", ", ".join(spec["devices"]))
+        for link in spec["links"]:
+            print(f"link   : {link['a']} <-> {link['b']}   OSPF area {link['area']}")
+        print()
+        print("what happened before the 3:14 page (minutes before the page, from the same file):")
+        for f in spec["fault"]:
+            extra = {k: v for k, v in f.items() if k not in ("at_min", "op", "link")}
+            print(f"  {f['at_min']:>4} min   {f['op']:<9} {f['link']}   {extra}")
+        """)
+    b.md("""
+        **What you just saw:** the uplink **flapped and recovered** an hour before the page (loud, lots of log lines).
+        Five minutes before the page, BRANCH-7's uplink was set to **area 0.0.0.1** (silent: no log line). Then it
+        flapped again. Two faults, one loud and one silent. The agents never read this file. They only see what the
+        router tools return, like you on the CLI.
+        """)
+    b.code("""
+        # 2/4  THE CHECKLIST - the on-call engineer's checks, in order. CODE runs them, not the model.
+        # Each answer is saved as numbered evidence (ev_01, ev_02, ...), like show output attached to a ticket.
+        skill = yaml.safe_load(resources.files("netops").joinpath("data", "diagnose.yaml").read_text())
+        for n, step in enumerate(skill["steps"], 1):
+            print(f"check {n}: {step['tool']:<15} {step['args']}")
+        from netops.agents.troubleshooting import topology_params
+        print()
+        print("the {blanks} are filled in from the topology, for tonight's page:")
+        for k, v in topology_params(inc.network).items():
+            print(f"  {{{k}}} = {v}")
+        print()
+        print("the evidence YOUR run collected, with its number:")
+        for ev in inc.evidence.all():
+            print(f"  {ev.id}   {ev.tool:<15} on {ev.args.get('device', '')}")
+        """)
+    b.md("""
+        **Read the order:** first the user's view (ping, route), then the OSPF neighbor, then the OSPF settings on
+        **both ends** of the link (BRANCH-7 *and* HUB-1), then the interface and the logs, and last the healthy
+        BRANCH-8 to compare. The loud logs come *late* on purpose. Lab 1's agent read them first and chased the flap.
+        """)
+    b.code("""
+        # 3/4  THE STAMP - written by engineers ONCE, before any incident: does this fault explain a dead site?
+        from netops.playbook import load_playbook
+        for entry in load_playbook().values():
+            print(f"{entry.title:<36} root_cause = {str(entry.root_cause):<5}   detected when: {entry.detect}")
+        """)
+    b.md("""
+        **The detectors, in plain words.** The next cell prints the real code. Read it like an ACL, top to bottom:
+
+        | In the code | In plain words | Card it makes |
+        |---|---|---|
+        | `intf["link_status_changes"] > FLAP_THRESHOLD` | the uplink went up/down **more than 4 times** (or more than 20 link lines in the log) | *Uplink interface flapping*, stamp from the playbook: **NO** |
+        | `full = any(... n["state"] == "full")` | is there a **FULL** OSPF neighbor on the uplink? | (just a question) |
+        | `if not full:` ... `if local["area"] != peer["area"]` | no FULL neighbor, **and the two ends of the link disagree on the area** | *OSPF area mismatch*, stamp from the playbook: **YES** |
+        | `else:` ... `explains_outage=True` | no FULL neighbor, areas agree, **cause unknown** | *adjacency not FULL, cause unknown*: **YES** (a dead adjacency is never ignored) |
+        | `explains_outage=e.root_cause` | **copy the stamp** from the playbook onto the card | - |
+        | `evidence_ids=[...]` | write on the card **which evidence numbers** prove it | - |
+
+        There's no AI in this function. Same evidence in, same cards out, every time.
+        """)
+    b.code("""
+        # 4/4  THE DETECTORS - the real code that makes the cards and stamps them. No model inside.
+        import inspect
+        from netops.agents import troubleshooting
+        print(inspect.getsource(troubleshooting.detect))
+        print("=" * 70)
+        print("YOUR two cards, as the coordinator receives them:")
+        print()
+        for f in findings:
+            print(f"CARD  {f.title}")
+            print(f"  stamp   explains_outage = {f.explains_outage}      <- copied from playbook.yaml by the code above")
+            print(f"  proof   evidence {f.evidence_ids}   observed {f.observed}")
+            print(f"  words   (the model) {f.narrative}")
+            print()
+        """)
+    b.md("""
+        **And the model?** It got the evidence and the two cards. It may do only two things: **put the cards in
+        order** and **write one sentence per card**. Then code checks its answer: exactly the same cards, none dropped
+        and none invented, and every evidence number it cites must exist. If the answer breaks a rule, it goes back to
+        the model. If the model fails completely, the cards are kept exactly as the code made them. **The model can't
+        change a stamp.**
+
+        **So the full chain is:** engineers write the stamp → code runs the checklist → code makes and stamps the
+        cards → the model explains → **your rule (next cell) picks the card the coordinator acts on.**
+        """)
+    b.md("""
         ## 2 -- Which finding does the coordinator act on?
         You now have **two findings**. One is **loud** (hundreds of log lines). One is **silent** (no log line at all).
-        Each finding has a field **`explains_outage`**: True if it explains why the site is *still* down.
+        Each card has the stamp **`explains_outage`** you just saw: True if it explains why the site is *still* down.
+        Your rule is the coordinator's policy: which card does the shift lead act on?
 
         The shift lead must act on the one that explains the outage - **not the loudest one**, and not just the
         first one in the list.
